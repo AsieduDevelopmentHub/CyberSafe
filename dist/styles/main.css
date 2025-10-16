@@ -439,7 +439,7 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 20px;
+    padding: 5px;
 }
 
 .module-modal-content {
@@ -457,22 +457,23 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: var(--space-xl);
+    padding: var(--space-sm);
     border-bottom: 1px solid var(--border);
     background: linear-gradient(135deg, var(--primary), #1E3A8A);
     color: white;
+    position: relative;
 }
 
 .module-header-info {
     display: flex;
     align-items: flex-start;
-    gap: var(--space-lg);
+    gap: var(--space-md);
     flex: 1;
 }
 
 .module-header-info .module-icon {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: var(--radius-md);
     background: rgba(255, 255, 255, 0.2);
     display: flex;
@@ -484,14 +485,16 @@ body {
 
 .module-header-info h3 {
     margin: 0 0 var(--space-xs) 0;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     color: white;
+    text-align: center;
 }
 
 .module-header-info p {
     margin: 0;
     opacity: 0.9;
     color: white;
+    text-align: center;
 }
 
 .close-module-modal {
@@ -506,6 +509,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    top: 5px;
+    right: 5px;
 }
 
 .module-modal-body {
@@ -1158,7 +1164,7 @@ body {
     
     .tab-button {
         flex: 1;
-        min-width: 120px;
+        min-width: 30px;
         justify-content: center;
     }
     
