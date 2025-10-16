@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSafe - Learn Cybersecurity the Smart Way</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/auth.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="shortcut icon" href="assets/icons/logo.svg" type="image/x-icon">
+    
+</head>
+<body>
+    <!-- Loading Animation -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="cyber-logo">
+                <div class="shield-icon">
+                    <img src="assets/icons/logo.svg" width="180px" alt="logo">
+                </div>
+                <h1>CyberSafe</h1>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p id="loadingText">Initializing security protocols...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Screens -->
+    <div id="authSection" class="section active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="logo">
+                    <img src="assets/icons/logo.svg" width="60px"  alt="logo"></img>
+                    <span>CyberSafe</span>
+                </div>
+                <h2>Learn Cybersecurity<br>The Smart Way</h2>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form active">
+                <h3>Welcome Back</h3>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <input type="email" id="loginEmail" placeholder="Email Address" required>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <span>Sign In</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+                <div class="auth-divider">
+                    <span>or continue with</span>
+                </div>
+                <button id="googleSignIn" class="btn-google">
+                    <i class="fab fa-google"></i>
+                    <span>Google</span>
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" id="showSignup">Sign Up</a>
+                </p>
+                <a href="#" class="forgot-password">Forgot Password?</a>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" class="auth-form">
+                <h3>Create Account</h3>
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <input type="text" id="signupName" placeholder="Full Name" required>
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="signupPassword" placeholder="Password" required>
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <span>Create Account</span>
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                </form>
+                <div class="auth-divider">
+                    <span>or continue with</span>
+                </div>
+                <button id="googleSignUp" class="btn-google">
+                    <i class="fab fa-google"></i>
+                    <span>Google</span>
+                </button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" id="showLogin">Sign In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="appSection" class="section">
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <div class="nav-brand">
+                <img src="assets/icons/logo.svg" width="40px"  alt="logo"></img>
+                <h2>CyberSafe</h2>
+            </div>
+            <div class="nav-actions">
+                <button id="themeToggle" class="nav-icon">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="userMenu" class="user-avatar">
+                    <img src="" alt="User" id="userAvatar">
+                </button>
+            </div>
+        </nav>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#modules" class="nav-item" data-section="modules">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Learn</span>
+            </a>
+            <a href="#caseStudies" class="nav-item" data-section="caseStudies">
+                <i class="fas fa-briefcase"></i>
+                <span>Cases</span>
+            </a>
+            <a href="#profile" class="nav-item" data-section="profile">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="dashboard-header">
+                    <h1 id="greeting">Welcome back!</h1>
+                    <p>Continue your cybersecurity journey</p>
+                </div>
+
+                <!-- Progress Overview -->
+                <div class="progress-overview">
+                    <div class="progress-circle">
+                        <div class="circle-bg"></div>
+                        <div class="circle-progress" style="--progress: 0%"></div>
+                        <div class="progress-text">
+                            <span class="percentage">0%</span>
+                            <span class="label">Complete</span>
+                        </div>
+                    </div>
+                    <div class="progress-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-fire"></i>
+                            <div>
+                                <span class="value">0</span>
+                                <span class="label">Day Streak</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-trophy"></i>
+                            <div>
+                                <span class="value">0</span>
+                                <span class="label">Badges</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-star"></i>
+                            <div>
+                                <span class="value">0%</span>
+                                <span class="label">Avg Score</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Continue Learning -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Continue Learning</h3>
+                        <a href="#modules" class="see-all">See All</a>
+                    </div>
+                    <div class="module-card active-module">
+                        <div class="module-icon">
+                            <i class="fas fa-fish"></i>
+                        </div>
+                        <div class="module-info">
+                            <h4>Phishing Awareness</h4>
+                            <p>Email security & scam detection</p>
+                            <div class="module-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                                <span>0% complete</span>
+                            </div>
+                        </div>
+                        <button class="btn-continue" data-module="phishing">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Featured Modules -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Learning Modules</h3>
+                    </div>
+                    <div class="modules-grid">
+                        <div class="module-item" data-module="phishing">
+                            <div class="module-icon">
+                                <i class="fas fa-fish"></i>
+                            </div>
+                            <h4>Phishing</h4>
+                            <p>Email security</p>
+                        </div>
+                        <div class="module-item" data-module="passwords">
+                            <div class="module-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <h4>Passwords</h4>
+                            <p>Strong passwords</p>
+                        </div>
+                        <div class="module-item" data-module="social">
+                            <div class="module-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h4>Social Engineering</h4>
+                            <p>Manipulation tactics</p>
+                        </div>
+                        <div class="module-item" data-module="network">
+                            <div class="module-icon">
+                                <i class="fas fa-wifi"></i>
+                            </div>
+                            <h4>Network Security</h4>
+                            <p>Safe browsing</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Modules Section -->
+            <section id="modules" class="content-section">
+                <div class="section-header">
+                    <h1>Learning Modules</h1>
+                    <p>Master cybersecurity fundamentals</p>
+                </div>
+                <div class="modules-list" id="modulesList">
+                    <!-- Modules will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Case Studies Section -->
+            <section id="caseStudies" class="content-section">
+                <div class="section-header">
+                    <h1>Case Studies</h1>
+                    <p>Learn from real-world incidents</p>
+                </div>
+                <div class="case-studies-list" id="caseStudiesList">
+                    <!-- Case studies will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="content-section">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <img src="" alt="User" id="profileAvatar">
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profileName">User Name</h2>
+                        <p id="profileEmail">user@example.com</p>
+                    </div>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">0%</span>
+                        <span class="stat-label">Overall Progress</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">0</span>
+                        <span class="stat-label">Day Streak</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">0/6</span>
+                        <span class="stat-label">Modules</span>
+                    </div>
+                </div>
+
+                <div class="profile-badges">
+                    <h3>Your Badges</h3>
+                    <div class="badges-grid" id="badgesGrid">
+                        <!-- Badges will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button class="btn-secondary">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
+                    <button class="btn-secondary">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Help & Support</span>
+                    </button>
+                    <button id="logoutBtn" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- All Modals -->
+    <div id="videoModal" class="video-modal" style="display: none;">
+        <div class="video-modal-content">
+            <div class="video-modal-header">
+                <h3 id="videoTitle">Video Title</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="video-player-container">
+                <div id="ytPlayer"></div>
+            </div>
+            <div class="video-actions">
+                <button class="btn-primary" id="markCompleteBtn">
+                    <i class="fas fa-check"></i>
+                    Mark as Completed
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quizModal" class="quiz-modal" style="display: none;">
+        <div class="quiz-modal-content">
+            <div class="quiz-header">
+                <h3 id="quizModuleTitle">Module Quiz</h3>
+                <div class="quiz-progress">
+                    Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+                </div>
+            </div>
+            
+            <div class="quiz-body">
+                <div id="quizQuestionContainer">
+                    <!-- Questions will be populated here -->
+                </div>
+            </div>
+            
+            <div class="quiz-footer">
+                <button id="prevQuestion" class="btn-secondary" disabled>
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button id="nextQuestion" class="btn-primary">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="submitQuiz" class="btn-success" style="display: none;">
+                    <i class="fas fa-paper-plane"></i> Submit Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="moduleContentModal" class="module-modal" style="display: none;">
+        <div class="module-modal-content">
+            <div class="module-modal-header">
+                <div class="module-header-info">
+                    <div class="module-icon" id="modalModuleIcon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalModuleTitle">Module Title</h3>
+                        <p id="modalModuleDesc">Module Description</p>
+                    </div>
+                </div>
+                <button class="close-module-modal">&times;</button>
+            </div>
+            
+            <div class="module-modal-body">
+                <div class="module-tabs">
+                    <button class="tab-button active" data-tab="videos">
+                        <i class="fas fa-play-circle"></i> Videos
+                    </button>
+                    <button class="tab-button" data-tab="lessons">
+                        <i class="fas fa-book"></i> Lessons
+                    </button>
+                    <button class="tab-button" data-tab="quiz">
+                        <i class="fas fa-tasks"></i> Quiz
+                    </button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="videosTab" class="tab-pane active">
+                        <div class="videos-grid" id="videosGrid">
+                            <!-- Videos will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div id="lessonsTab" class="tab-pane">
+                        <div class="lessons-content" id="lessonsContent">
+                            <!-- Lesson content will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div id="quizTab" class="tab-pane">
+                        <div class="quiz-intro">
+                            <div class="quiz-info-card">
+                                <i class="fas fa-trophy"></i>
+                                <h4>Test Your Knowledge</h4>
+                                <p>Complete this quiz to earn your module badge and track your progress</p>
+                                <div class="quiz-stats">
+                                    <span><i class="fas fa-question-circle"></i> 5 Questions</span>
+                                    <span><i class="fas fa-clock"></i> 10 min estimate</span>
+                                    <span><i class="fas fa-star"></i> 80% to pass</span>
+                                </div>
+                                <button id="startQuizBtn" class="btn-primary">
+                                    <i class="fas fa-play"></i> Start Quiz
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="scripts/firebase-config.js"></script>
+    <script src="scripts/firestore-service.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        const progressFill = document.querySelector('.progress-fill');
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }, 500);
+            }
+            
+            progressFill.style.transform = `translateX(${progress - 100}%)`;
+        }, 200);
+
+        setTimeout(() => {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+        }, 3000);
+    });
+    </script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/dashboard.js"></script>
+    <script src="scripts/modules.js"></script>
+    <script src="scripts/quiz-system.js"></script>
+    <script src="scripts/video-player.js"></script>
+    <script src="scripts/module-content.js"></script>
+    <script src="scripts/navigation-manager.js"></script>
+    <script src="scripts/app-enhancements.js"></script>
+    <script src="scripts/app.js"></script>
+    
+      <!-- Register service worker -->
+  <script>
+    //if ('serviceWorker' in navigator) {
+      //navigator.serviceWorker.register('/service-worker.js').catch(()=>{ /* ignore */ });
+    //}
+  </script>
+</body>
+</html>
