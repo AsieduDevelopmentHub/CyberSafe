@@ -7,147 +7,167 @@ class VideoPlayerManager {
         this.initYouTubeAPI();
     }
 
-    // Updated YouTube Video Configuration with legitimate, verified videos
-    videoConfigs = {
-        phishing: [
-            { 
-                id: 'Y7SzFnF6a2I', 
-                title: 'What is Phishing? Learn How This Attack Works', 
-                description: 'Understanding the basics of phishing attacks and how to recognize them',
-                duration: '4:15', 
-                provider: 'SANS Institute' 
-            },
-            { 
-                id: 'R12_y2BhKbE', 
-                title: 'How to Spot Phishing Emails', 
-                description: 'Learn to identify suspicious email characteristics and avoid scams',
-                duration: '6:30', 
-                provider: 'Google Security' 
-            },
-            { 
-                id: 'o0WY1q6egW0', 
-                title: 'Phishing Explained in 6 Minutes', 
-                description: 'Comprehensive overview of phishing techniques and prevention',
-                duration: '6:12', 
-                provider: 'IBM Technology' 
-            }
-        ],
-        passwords: [
-            { 
-                id: 'KnK9S3xM1k0', 
-                title: 'Creating Strong Passwords - Best Practices', 
-                description: 'Learn how to create secure passwords that are hard to crack',
-                duration: '5:45', 
-                provider: 'CyberNews' 
-            },
-            { 
-                id: 'bUFzUl_1Tqs', 
-                title: 'Password Security Explained', 
-                description: 'Understanding password security and why it matters',
-                duration: '7:20', 
-                provider: 'Security Journey' 
-            },
-            { 
-                id: 'PfkqHhjc-0c', 
-                title: 'How to Use Password Managers', 
-                description: 'Complete guide to using password managers effectively',
-                duration: '8:15', 
-                provider: 'Techlore' 
-            }
-        ],
-        social: [
-            { 
-                id: 'lc7scxvKQOo', 
-                title: 'Social Engineering - How People Hack Humans', 
-                description: 'Understanding manipulation tactics used by attackers',
-                duration: '9:10', 
-                provider: 'Hak5' 
-            },
-            { 
-                id: 'TVv6R1LwM7Y', 
-                title: 'Social Engineering Attacks Explained', 
-                description: 'Learn about common social engineering techniques',
-                duration: '5:45', 
-                provider: 'IBM Security' 
-            },
-            { 
-                id: 'm8vL1cMtV_s', 
-                title: 'Preventing Social Engineering', 
-                description: 'How to protect yourself from social engineering attacks',
-                duration: '6:30', 
-                provider: 'KnowBe4' 
-            }
-        ],
-        network: [
-            { 
-                id: 'KX4G49ZrvL0', 
-                title: 'VPNs Explained - How VPNs Protect Your Privacy', 
-                description: 'Understanding VPN technology and security benefits',
-                duration: '8:45', 
-                provider: 'NetworkChuck' 
-            },
-            { 
-                id: '4ZAkMS9qTFQ', 
-                title: 'Safe Browsing Habits for 2024', 
-                description: 'Best practices for secure internet browsing',
-                duration: '6:30', 
-                provider: 'The PC Security Channel' 
-            },
-            { 
-                id: 'KcY3o7f7h7c', 
-                title: 'Home Network Security Basics', 
-                description: 'How to secure your home Wi-Fi and network',
-                duration: '7:15', 
-                provider: 'TechHut' 
-            }
-        ],
-        data: [
-            { 
-                id: 'yzM6L4v13qA', 
-                title: 'Data Protection Principles - GDPR Basics', 
-                description: 'Fundamentals of data security and privacy regulations',
-                duration: '10:15', 
-                provider: 'GDPR Guide' 
-            },
-            { 
-                id: 'KlrX_2erev4', 
-                title: 'Personal Data Security in Digital Age', 
-                description: 'Protecting your personal information online',
-                duration: '7:50', 
-                provider: 'Security Now' 
-            },
-            { 
-                id: 'sRk3cZgqJcI', 
-                title: 'Data Privacy Tips Everyone Should Know', 
-                description: 'Essential tips for protecting your data privacy',
-                duration: '5:20', 
-                provider: 'All Things Secured' 
-            }
-        ],
-        mobile: [
-            { 
-                id: 'Mp4nwRgBJ6M', 
-                title: 'Mobile Security - Essential Tips', 
-                description: 'Essential security practices for mobile devices',
-                duration: '9:05', 
-                provider: 'ESET' 
-            },
-            { 
-                id: 'WbTC9SfK8D8', 
-                title: 'Understanding App Permissions', 
-                description: 'How to manage app permissions for better security',
-                duration: '8:15', 
-                provider: 'Malwarebytes' 
-            },
-            { 
-                id: 'eWVv5s7YtpA', 
-                title: 'Smartphone Security Guide', 
-                description: 'Complete guide to securing your smartphone',
-                duration: '6:45', 
-                provider: 'The Cyber Mentor' 
-            }
-        ]
-    };
+    // Updated YouTube Video Configuration with verified, embed-friendly videos
+    // Updated YouTube Video Configuration with legitimate, embed-friendly videos
+videoConfigs = {
+    phishing: [
+            
+        { 
+            id: 'Y7zNlEMDmI4', 
+            title: 'What is Phishing. Learn How This Attack Works.', 
+            description: 'What is Phishing. Learn How This Attack Works.',
+            duration: '2:57', 
+            provider: 'TECHtalk',
+            embedAllowed: true
+        },
+        { 
+            id: 'R12_y2BhKbE', 
+            title: 'How to Spot Phishing Emails', 
+            description: 'Learn to identify suspicious email characteristics and avoid scams',
+            duration: '6:30', 
+            provider: 'Google Security',
+            embedAllowed: true
+        },
+        { 
+            id: 'XBkzBrXlle0', 
+            title: 'Phishing scenarios. Learn How This Attack Works', 
+            description: 'Understanding the effects of phishing attacks and how to avoid them',
+            duration: '6:48', 
+            provider: 'Simplilearn',
+            embedAllowed: true
+        }
+    ],
+    passwords: [
+        { 
+            id: 'CNMKuqb3xFk', 
+            title: 'Why is Password Security Important', 
+            description: 'Understanding password security and why it matters',
+            duration: '1:55', 
+            provider: 'Keeper Security',
+            embedAllowed: true
+        },
+        { 
+            id: 'Pm9D-h7FqV4', 
+            title: 'Creating Strong Passwords - Best Practices', 
+            description: 'Learn how to create secure passwords that are hard to crack',
+            duration: '4:30', 
+            provider: 'CyberSafetySimplified',
+            embedAllowed: true
+        },
+        { 
+            id: 'zuvUj7GaZU8', 
+            title: 'How to Use Password Managers', 
+            description: 'Complete guide to using password managers effectively',
+            duration: '9:19', 
+            provider: 'Cybernews',
+            embedAllowed: true
+        }
+    ],
+    social: [
+        { 
+            id: 'v7VTJhkJUUY', 
+            title: 'Social Engineering Attacks Explained', 
+            description: 'Learn about common social engineering techniques',
+            duration: '6:56', 
+            provider: 'MalwareFox',
+            embedAllowed: true
+        },
+        { 
+            id: 'XEtvwzN_xJk', 
+            title: 'How to Avoid Social Engineering Attacks', 
+            description: 'How to protect yourself from social engineering attacks',
+            duration: '2:16', 
+            provider: 'Google Help',
+            embedAllowed: true
+        },
+        { 
+            id: 'lc7scxvKQOo', 
+            title: 'Social Engineering - How People Hack Humans', 
+            description: 'Understanding manipulation tactics used by attackers',
+            duration: '9:10', 
+            provider: 'Garrett Myler',
+            embedAllowed: true
+        }
+    ],
+    network: [
+        { 
+            id: '_-DekqEyAV0', 
+            title: 'VPNs Explained - How VPNs Protect Your Privacy', 
+            description: 'Understanding VPN technology and security benefits',
+            duration: '5:49', 
+            provider: 'Simplilearn',
+            embedAllowed: true
+        },
+        { 
+            id: 'aO858HyFbKI', 
+            title: 'Safe Browsing Habits for 2025', 
+            description: 'Best practices for secure internet browsing',
+            duration: '4:01', 
+            provider: 'Kaspersky',
+            embedAllowed: true
+        },
+        { 
+            id: '9GZlVOafYTg', 
+            title: 'Firewalls and Network Security Basics', 
+            description: 'How to secure yourself on the internet',
+            duration: '5:38', 
+            provider: 'Simplilearn',
+            embedAllowed: true
+        }
+    ],
+    data: [
+        { 
+            id: 'NpQPBKvYYlc', 
+            title: 'Data Protection Principles - GDPR Basics', 
+            description: 'Fundamentals of data security and privacy regulations',
+            duration: '13:49', 
+            provider: 'Xploit Cyber Security',
+            embedAllowed: true
+        },
+        { 
+            id: '5epUUK3jqRQ', 
+            title: 'Personal Data Security in Digital Age', 
+            description: 'Protecting your personal information online',
+            duration: '10:07', 
+            provider: 'MS Learning',
+            embedAllowed: true
+        },
+        { 
+            id: 'p1buq8pAuyE', 
+            title: 'Data Privacy Tips Everyone Should Know', 
+            description: 'Essential tips for protecting your data privacy',
+            duration: '1:09', 
+            provider: 'RapidTech Bites',
+            embedAllowed: true
+        }
+    ],
+    mobile: [
+        { 
+            id: '8J8z8ekeYVQ', 
+            title: 'Mobile Security - Essential Tips', 
+            description: 'Essential security practices for mobile devices',
+            duration: '6:69', 
+            provider: 'Certo Software',
+            embedAllowed: true
+        },
+        { 
+            id: 'NSOJU5nV4v4', 
+            title: 'Understanding App Permissions', 
+            description: 'How to manage app permissions for better security',
+            duration: '2:10', 
+            provider: 'ITCubed',
+            embedAllowed: true
+        },
+        { 
+            id: 'm_SN1CB3Kts', 
+            title: 'Smartphone Security Guide', 
+            description: 'Complete guide to securing your smartphone',
+            duration: '13:16', 
+            provider: 'The Hated One',
+            embedAllowed: true
+        }
+    ]
+};
 
     initYouTubeAPI() {
         console.log('🎬 Initializing YouTube API...');
@@ -166,10 +186,15 @@ class VideoPlayerManager {
         }
 
         try {
-            // Load YouTube IFrame API
+            // Load YouTube IFrame API with proper protocol
             const tag = document.createElement('script');
             tag.src = "https://www.youtube.com/iframe_api";
             tag.async = true;
+            tag.onerror = () => {
+                console.error('❌ Failed to load YouTube API');
+                this.YouTubeAPIReady = false;
+            };
+            
             const firstScriptTag = document.getElementsByTagName('script')[0];
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
@@ -185,12 +210,21 @@ class VideoPlayerManager {
             };
 
             // Fallback: Check periodically if API loaded
-            setTimeout(() => {
+            const fallbackCheck = setInterval(() => {
                 if (!this.YouTubeAPIReady && window.YT && window.YT.Player) {
                     this.YouTubeAPIReady = true;
+                    clearInterval(fallbackCheck);
                     console.log('✅ YouTube API loaded via fallback check');
                 }
-            }, 2000);
+            }, 500);
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (!this.YouTubeAPIReady) {
+                    clearInterval(fallbackCheck);
+                    console.error('❌ YouTube API loading timeout');
+                }
+            }, 10000);
 
         } catch (error) {
             console.error('❌ Error loading YouTube API:', error);
@@ -240,7 +274,10 @@ class VideoPlayerManager {
 
     initializePlayer(containerId, videoId, options, resolve, reject) {
         try {
-            console.log('🔄 Initializing YouTube player...');
+            console.log('🔄 Initializing YouTube player with security headers...');
+            
+     // Get current origin for security headers
+            const currentOrigin = window.location.origin || 'https://cybersafe.com' || 'https://asiedudevelopmenthub.github.io/CyberSafe/dist';
             
             const player = new YT.Player(containerId, {
                 height: options.height || '360',
@@ -250,10 +287,12 @@ class VideoPlayerManager {
                     'playsinline': 1,
                     'rel': 0,
                     'modestbranding': 1,
-                    'showinfo': 0,
                     'controls': 1,
                     'enablejsapi': 1,
-                    'origin': window.location.origin
+                    'origin': currentOrigin,
+                    'widget_referrer': currentOrigin,
+                    'fs': 1,
+                    'autoplay': 0
                 },
                 events: {
                     'onReady': (event) => {
@@ -267,6 +306,9 @@ class VideoPlayerManager {
                     'onError': (event) => {
                         console.error('❌ YouTube Player Error:', event.data, 'for video:', videoId);
                         this.handlePlayerError(event.data, videoId, reject);
+                    },
+                    'onApiChange': (event) => {
+                        console.log('🔧 YouTube API change:', event);
                     }
                 }
             });
@@ -282,40 +324,55 @@ class VideoPlayerManager {
 
     handlePlayerError(errorCode, videoId, reject) {
         const errorMessages = {
-            2: 'Invalid video ID',
-            5: 'HTML5 player error',
-            100: 'Video not found',
-            101: 'Embedding not allowed',
-            150: 'Embedding not allowed'
+            2: 'Invalid video ID or video not available',
+            5: 'HTML5 player error - Please try another browser',
+            100: 'Video not found or has been removed',
+            101: 'Embedding not allowed by video owner',
+            150: 'Embedding not allowed by video owner'
         };
         
-        const message = errorMessages[errorCode] || `YouTube error: ${errorCode}`;
+        const message = errorMessages[errorCode] || `YouTube playback error: ${errorCode}`;
         console.error(`❌ Player error for ${videoId}:`, message);
         
-        // Show user-friendly error
-        this.showPlayerError(message);
+        // Show user-friendly error with retry option
+        this.showPlayerError(message, videoId);
         reject(new Error(message));
     }
 
-    showPlayerError(message) {
+    showPlayerError(message, videoId) {
         const modal = document.getElementById('videoModal');
         if (modal) {
             const playerContainer = modal.querySelector('.video-player-container');
             if (playerContainer) {
                 playerContainer.innerHTML = `
                     <div class="player-error">
-                        <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
                         <h4>Video Playback Error</h4>
                         <p>${message}</p>
-                        <button class="btn-secondary" onclick="videoPlayerManager.retryVideo()">Try Again</button>
+                        <div class="error-actions">
+                            <button class="btn-secondary" onclick="videoPlayerManager.retryVideo()">
+                                <i class="fas fa-redo"></i> Try Again
+                            </button>
+                            <button class="btn-primary" onclick="videoPlayerManager.openYouTubeDirect('${videoId}')">
+                                <i class="fab fa-youtube"></i> Watch on YouTube
+                            </button>
+                        </div>
                     </div>
                 `;
             }
         }
     }
 
+    // Fallback method to open video directly on YouTube
+    openYouTubeDirect(videoId) {
+        console.log('🔗 Opening video on YouTube:', videoId);
+        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
+        this.closeVideoModal();
+    }
+
     retryVideo() {
         if (this.currentVideoId) {
+            console.log('🔄 Retrying video:', this.currentVideoId);
             this.initVideoPlayer(this.currentVideoId);
         }
     }
@@ -348,6 +405,7 @@ class VideoPlayerManager {
         if (markCompleteBtn) {
             markCompleteBtn.style.display = 'block';
             markCompleteBtn.innerHTML = '<i class="fas fa-check"></i> Mark as Completed';
+            markCompleteBtn.classList.remove('completed');
         }
     }
 
@@ -383,11 +441,12 @@ class VideoPlayerManager {
                         <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" 
                              alt="${video.title}" 
                              loading="lazy" 
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBBMUY0NCIvPjx0ZXh0IHg9IjE2MCIgeT0iOTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+JHt2aWRlby50aXRsZX08L3RleHQ+PC9zdmc+'">
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjE2MCIgeT0iOTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+JHt2aWRlby50aXRsZX08L3RleHQ+PC9zdmc+'">
                         <div class="play-overlay">
                             <i class="fas fa-play"></i>
                         </div>
                         <div class="video-duration">${video.duration}</div>
+                        ${!video.embedAllowed ? '<div class="embed-warning" title="May require YouTube.com"><i class="fas fa-external-link-alt"></i></div>' : ''}
                     </div>
                     <div class="video-info">
                         <h4>${video.title}</h4>
@@ -461,7 +520,9 @@ class VideoPlayerManager {
                 <i class="fas fa-exclamation-circle fa-2x"></i>
                 <h4>Error Loading Videos</h4>
                 <p>${message}</p>
-                <button class="btn-secondary" onclick="videoPlayerManager.retryLoadVideos()">Try Again</button>
+                <button class="btn-secondary" onclick="videoPlayerManager.retryLoadVideos()">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
             </div>
         `;
     }
@@ -509,6 +570,10 @@ class VideoPlayerManager {
                             <i class="fas fa-check"></i>
                             Mark as Completed
                         </button>
+                        <button class="btn-secondary" onclick="videoPlayerManager.openYouTubeDirect('${videoId}')">
+                            <i class="fab fa-youtube"></i>
+                            Watch on YouTube
+                        </button>
                         <button class="btn-secondary" onclick="videoPlayerManager.closeVideoModal()">
                             <i class="fas fa-times"></i>
                             Close
@@ -553,6 +618,7 @@ class VideoPlayerManager {
             const markCompleteBtn = modal.querySelector('#markCompleteBtn');
             if (markCompleteBtn) {
                 markCompleteBtn.style.display = 'none';
+                markCompleteBtn.classList.remove('completed');
             }
             
             // Show loading state
@@ -565,6 +631,12 @@ class VideoPlayerManager {
                     </div>
                     <div id="ytPlayer"></div>
                 `;
+            }
+
+            // Update YouTube button with current video ID
+            const youtubeBtn = modal.querySelector('.btn-secondary[onclick*="openYouTubeDirect"]');
+            if (youtubeBtn) {
+                youtubeBtn.setAttribute('onclick', `videoPlayerManager.openYouTubeDirect('${videoId}')`);
             }
         }
 
@@ -611,10 +683,15 @@ class VideoPlayerManager {
                     <div class="player-error">
                         <i class="fas fa-exclamation-triangle fa-2x"></i>
                         <h4>Failed to Load Video</h4>
-                        <p>There was an error loading the video player. Please try again.</p>
-                        <button class="btn-secondary" onclick="videoPlayerManager.retryVideo()">
-                            <i class="fas fa-redo"></i> Try Again
-                        </button>
+                        <p>There was an error loading the video player. This video may have embedding restrictions.</p>
+                        <div class="error-actions">
+                            <button class="btn-secondary" onclick="videoPlayerManager.retryVideo()">
+                                <i class="fas fa-redo"></i> Try Again
+                            </button>
+                            <button class="btn-primary" onclick="videoPlayerManager.openYouTubeDirect('${videoId}')">
+                                <i class="fab fa-youtube"></i> Watch on YouTube
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -695,8 +772,15 @@ class VideoPlayerManager {
                 // Update user progress
                 await window.firestoreService.trackVideoCompletion(uid, videoId);
                 
-                // Close modal and show success message
-                this.closeVideoModal();
+                // Update completion button
+                const markCompleteBtn = document.getElementById('markCompleteBtn');
+                if (markCompleteBtn) {
+                    markCompleteBtn.innerHTML = '<i class="fas fa-check"></i> Completed!';
+                    markCompleteBtn.classList.add('completed');
+                    markCompleteBtn.disabled = true;
+                }
+                
+                // Show success message
                 this.showCompletionMessage('Video marked as completed! 🎉');
                 
                 // Update user streak
@@ -715,7 +799,12 @@ class VideoPlayerManager {
             }
         } else {
             // Fallback for non-authenticated users
-            this.closeVideoModal();
+            const markCompleteBtn = document.getElementById('markCompleteBtn');
+            if (markCompleteBtn) {
+                markCompleteBtn.innerHTML = '<i class="fas fa-check"></i> Completed!';
+                markCompleteBtn.classList.add('completed');
+                markCompleteBtn.disabled = true;
+            }
             this.showCompletionMessage('Video marked as completed! 🎉');
         }
     }
@@ -814,10 +903,29 @@ class VideoPlayerManager {
         });
         this.players.clear();
     }
+
+    // Test video embedding (for debugging)
+    async testVideoEmbedding(videoId) {
+        try {
+            const testContainer = document.createElement('div');
+            testContainer.style.display = 'none';
+            document.body.appendChild(testContainer);
+            
+            const player = await this.createPlayer(testContainer.id, videoId);
+            const isPlayable = player && typeof player.playVideo === 'function';
+            
+            player.destroy();
+            document.body.removeChild(testContainer);
+            
+            return isPlayable;
+        } catch (error) {
+            return false;
+        }
+    }
 }
 
 // Initialize Video Player Manager when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function(){
     window.videoPlayerManager = new VideoPlayerManager();
     console.log('🎬 Video Player Manager initialized');
 });

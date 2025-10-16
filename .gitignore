@@ -3,3 +3,6 @@
 
 # Firebase credentials
 ./dist/scripts/firebase-config.js
+
+#Search files
+./search.txt
