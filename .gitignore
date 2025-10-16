@@ -2,7 +2,7 @@
 .env
 
 # Firebase credentials
-./dist/scripts/firebase-config.js
+dist/scripts/firebase-config.js
 
 #Search files
-./search.txt
+search.txt
