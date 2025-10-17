@@ -64,7 +64,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--auth-background) 0%, #1E3A8A 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -354,7 +354,8 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 20px;
+    padding: 10px;
+    z-index: 1001 !important;
 }
 
 .video-modal-content {
@@ -382,13 +383,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-lg);
+    padding: var(--space-lg) var(--space-xl);
     border-bottom: 1px solid var(--border);
 }
 
 .video-modal-header h3 {
     margin: 0;
     color: var(--text-primary);
+    padding-bottom: var(--space-lg);
 }
 
 .close-modal {
@@ -427,6 +429,16 @@ body {
     text-align: center;
 }
 
+.player-loading{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
 /* Module Modal Styles */
 .module-modal {
     position: fixed;
@@ -440,6 +452,7 @@ body {
     justify-content: center;
     z-index: 1000;
     padding: 5px;
+    z-index: 1000 !important;
 }
 
 .module-modal-content {
@@ -462,6 +475,7 @@ body {
     background: linear-gradient(135deg, var(--primary), #1E3A8A);
     color: white;
     position: relative;
+    text-align: center;
 }
 
 .module-header-info {
@@ -510,8 +524,8 @@ body {
     align-items: center;
     justify-content: center;
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: 10px;
+    right: 10px;
 }
 
 .module-modal-body {
@@ -864,6 +878,64 @@ body {
     padding: var(--space-lg);
 }
 
+/* Quiz Access Denied Styles */
+.quiz-access-denied {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    text-align: center;
+}
+
+.access-denied-content {
+    max-width: 400px;
+    padding: 2rem;
+}
+
+.access-denied-content i {
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+.access-denied-content h3 {
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+.access-requirements {
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.requirement {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+}
+
+.requirement i {
+    color: #10b981;
+    margin-right: 1rem;
+    font-size: 1.25rem;
+}
+
+.completion-toast.show {
+    transform: translateX(0);
+}
+
+.completion-toast.error {
+    background: #ef4444;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .results-header {
     text-align: center;
     padding: var(--space-xl);
@@ -1140,6 +1212,9 @@ body {
     .nav-brand span {
         display: none;
     }
+        .video-modal{
+        padding: 5px;
+        }
 
     .video-modal-content,
     .module-modal-content,

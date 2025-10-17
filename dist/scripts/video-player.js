@@ -231,6 +231,47 @@ videoConfigs = {
         }
     }
 
+    closeVideoModal() {
+        console.log('🔒 Closing video modal');
+        const modal = document.getElementById('videoModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+            
+            // Stop any playing video
+            const player = this.players.get('ytPlayer');
+            if (player && player.stopVideo) {
+                player.stopVideo();
+            }
+            
+            // NEW: Return focus to module content modal
+            this.returnToModuleContent();
+        }
+    }
+    
+    returnToModuleContent() {
+        console.log('🔄 Returning to module content');
+        
+        // Ensure module content modal is visible and focused
+        const moduleModal = document.getElementById('moduleContentModal');
+        if (moduleModal && moduleModal.style.display === 'flex') {
+            // Already visible, just bring to focus
+            moduleModal.style.zIndex = '1000';
+            console.log('✅ Module content modal is active');
+        } else {
+            // Reopen module modal if it was closed
+            if (window.moduleContentManager && window.moduleContentManager.currentModule) {
+                console.log('🔄 Reopening module modal for:', window.moduleContentManager.currentModule.id);
+                window.moduleContentManager.showModuleModal();
+            }
+        }
+        // Update the video modal z-index to be below module modal when hidden
+        const videoModal = document.getElementById('videoModal');
+        if (videoModal) {
+            videoModal.style.zIndex = '1001'; // Higher when active, lower when hidden
+        }
+    }
+
     createPlayer(containerId, videoId, options = {}) {
         return new Promise((resolve, reject) => {
             console.log('🎮 Creating YouTube player for:', videoId);
@@ -591,6 +632,7 @@ videoConfigs = {
             // Mark complete handler
             modal.querySelector('#markCompleteBtn').addEventListener('click', () => {
                 this.markVideoComplete(videoId);
+                this.closeVideoModal();
             });
 
             // Close on background click
@@ -640,8 +682,15 @@ videoConfigs = {
             }
         }
 
+        // Set video modal above module modal
+        modal.style.zIndex = '1001';
         modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
+
+        const moduleModal = document.getElementById('moduleContentModal');
+        if (moduleModal) {
+            moduleModal.style.zIndex = '1000';
+        }
         
         // Initialize YouTube player
         this.initVideoPlayer(videoId);
@@ -745,20 +794,35 @@ videoConfigs = {
                 // Get current module progress
                 const currentModule = window.moduleContentManager?.currentModule;
                 if (currentModule) {
+                    // Add video to completed videos
+                    await window.firestoreService.trackVideoCompletion(uid, videoId);
+                    
+                    // Recalculate module progress
                     const moduleProgress = await this.calculateModuleProgress(uid, currentModule.id);
                     
-                    // Update module progress based on video completion
+                    // Update module progress
                     await window.firestoreService.saveModuleProgress(uid, currentModule.id, {
                         progress: moduleProgress,
                         lastUpdated: new Date(),
                         videosCompleted: firebase.firestore.FieldValue.arrayUnion(videoId)
                     });
                     
-                    console.log(`✅ Module ${currentModule.id} progress updated to: ${moduleProgress}% after video completion`);
+                    console.log(`✅ Module ${currentModule.id} progress updated to: ${moduleProgress}%`);
+                    
+                    // Check if quiz should be unlocked
+                    this.checkQuizUnlockStatus(currentModule.id, moduleProgress);
                 }
             } catch (error) {
                 console.error('❌ Error updating module progress after video:', error);
             }
+        }
+    }
+
+    async checkQuizUnlockStatus(moduleId, progress) {
+        // If progress reaches threshold, quiz becomes available
+        if (progress >= 70) {
+            console.log('🎉 Quiz unlocked for module:', moduleId);
+            // You could show a notification here
         }
     }
 

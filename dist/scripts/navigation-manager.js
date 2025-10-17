@@ -186,22 +186,38 @@ class NavigationManager {
 
     isAnyModalOpen() {
         const modals = document.querySelectorAll('.video-modal, .quiz-modal, .module-modal');
-        return Array.from(modals).some(modal => 
-            modal.style.display === 'flex' || modal.style.display === 'block'
-        );
+        return Array.from(modals).some(modal => {
+            const display = modal.style.display;
+            return display === 'flex' || display === 'block';
+        });
     }
 
-    closeAllModals() {
-        const modals = document.querySelectorAll('.video-modal, .quiz-modal, .module-modal');
-        modals.forEach(modal => {
-            modal.style.display = 'none';
-        });
-
+   closeAllModals() {
+        console.log('🔒 Closing all modals with proper navigation');
+        
+        // Close video modal first
         if (window.videoPlayerManager) {
             window.videoPlayerManager.closeVideoModal();
         }
-
-        console.log('🔒 All modals closed');
+        
+        // Close quiz modal
+        const quizModal = document.getElementById('quizModal');
+        if (quizModal) {
+            quizModal.style.display = 'none';
+        }
+        
+        // Don't close module modal - just ensure it's properly layered
+        const moduleModal = document.getElementById('moduleContentModal');
+        if (moduleModal && moduleModal.style.display === 'flex') {
+            // Keep module modal open but ensure it's on top
+            moduleModal.style.zIndex = '1000';
+            console.log('✅ Module content modal remains open');
+        }
+        
+        // Restore body scrolling only if no modals are open
+        if (!this.isAnyModalOpen()) {
+            document.body.style.overflow = '';
+        }
     }
 
     setupModalCloseHandlers() {
