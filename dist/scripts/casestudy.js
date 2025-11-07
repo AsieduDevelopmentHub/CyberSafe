@@ -688,7 +688,7 @@ class CaseStudyManager {
 
                 // Update dashboard if needed
                 if (window.dashboardManager) {
-                    window.dashboardManager.refreshProgress();
+                    window.dashboardManager.refreshDashboard();
                 }
 
             } catch (error) {

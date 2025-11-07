@@ -2,17 +2,27 @@ class AuthManager {
     constructor() {
         this.currentUser = null;
         this.init();
+        this.actionCodeSettings = {
+            url: window.location.origin,
+            handleCodeInApp: true
+        };
     }
 
     init() {
-        // Check auth state
+        // Check auth state and handle email verification
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 this.handleUserLogin(user);
+                this.checkEmailVerification(user);
             } else {
                 this.handleUserLogout();
             }
         });
+
+        // Handle email verification through URL
+        if (window.location.search.includes('mode=verifyEmail')) {
+            this.handleEmailVerificationLink(window.location.href);
+        }
 
         // Form event listeners
         this.setupEventListeners();
@@ -22,11 +32,27 @@ class AuthManager {
         // Login form
         const loginForm = document.getElementById('loginFormElement');
         const signupForm = document.getElementById('signupFormElement');
+        const forgotPasswordLink = document.getElementById('forgotPassword');
+        const resendVerificationLink = document.getElementById('resendVerification');
         
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.handleEmailLogin();
+            });
+        }
+
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleForgotPassword();
+            });
+        }
+
+        if (resendVerificationLink) {
+            resendVerificationLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.resendVerificationEmail();
             });
         }
 
@@ -125,14 +151,21 @@ class AuthManager {
                 displayName: name
             });
 
+            // Send verification email
+            await user.sendEmailVerification(this.actionCodeSettings);
+
             // Create user document in Firestore
             if (window.firestoreService) {
                 await window.firestoreService.createUserProfile(user, { 
                     name: name,
-                    email: email 
+                    email: email,
+                    emailVerified: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
 
+            this.showSuccess('Verification email sent. Please check your inbox.');
             console.log('User created:', user);
         } catch (error) {
             this.showError('Signup failed: ' + error.message);
@@ -369,8 +402,100 @@ class AuthManager {
     }
 
     showError(message) {
-        // Simple error display
         alert(message);
+    }
+
+    showSuccess(message) {
+        alert(message); // You might want to create a better UI for success messages
+    }
+
+    async handleForgotPassword() {
+        const email = document.getElementById('loginEmail').value;
+        if (!email) {
+            this.showError('Please enter your email address');
+            return;
+        }
+
+        try {
+            await firebase.auth().sendPasswordResetEmail(email, this.actionCodeSettings);
+            this.showSuccess('Password reset email sent. Please check your inbox.');
+        } catch (error) {
+            this.showError('Failed to send password reset email: ' + error.message);
+        }
+    }
+
+    async resendVerificationEmail() {
+        const user = firebase.auth().currentUser;
+        if (user && !user.emailVerified) {
+            try {
+                await user.sendEmailVerification(this.actionCodeSettings);
+                this.showSuccess('Verification email sent. Please check your inbox.');
+            } catch (error) {
+                this.showError('Failed to send verification email: ' + error.message);
+            }
+        }
+    }
+
+    async handleEmailVerificationLink(link) {
+        try {
+            if (firebase.auth().isSignInWithEmailLink(link)) {
+                await firebase.auth().signInWithEmailLink(email, link);
+                this.showSuccess('Email verified successfully!');
+            }
+        } catch (error) {
+            this.showError('Failed to verify email: ' + error.message);
+        }
+    }
+
+    async checkEmailVerification(user) {
+        if (user && !user.emailVerified) {
+            // You might want to show a banner or message in the UI
+            console.log('Email not verified');
+            this.showEmailVerificationBanner();
+        } else {
+            this.hideEmailVerificationBanner();
+        }
+    }
+
+    showEmailVerificationBanner() {
+        const banner = document.getElementById('emailVerificationBanner');
+        if (banner) {
+            banner.style.display = 'flex';
+        }
+    }
+
+    hideEmailVerificationBanner() {
+        const banner = document.getElementById('emailVerificationBanner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+    }
+
+    async handleEmailLogin() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        try {
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            if (!user.emailVerified) {
+                this.showError('Please verify your email before logging in.');
+                await this.handleLogout();
+                return;
+            }
+
+            console.log('User logged in:', user);
+            
+            // Update user profile with last login
+            if (window.firestoreService) {
+                await window.firestoreService.updateUserProgress(user.uid, {
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        } catch (error) {
+            this.showError('Login failed: ' + error.message);
+        }
     }
 }
 

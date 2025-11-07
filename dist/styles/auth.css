@@ -142,6 +142,28 @@
     margin-top: var(--space-md);
 }
 
+.verification-banner {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.verification-banner button {
+    background-color: #856404;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
 @media (max-width: 480px) {
     .auth-container {
         padding: var(--space-lg);

@@ -70,7 +70,12 @@
                 <p class="auth-switch">
                     Don't have an account? <a href="#" id="showSignup">Sign Up</a>
                 </p>
-                <a href="#" class="forgot-password">Forgot Password?</a>
+                <a href="#" class="forgot-password" id="forgotPassword">Forgot Password?</a>
+                <!-- Add after the auth forms -->
+                <div id="emailVerificationBanner" class="verification-banner" style="display: none;">
+                    <p>Please verify your email address to continue</p>
+                    <button id="resendVerification" class="btn-secondary">Resend Verification Email</button>
+                </div>
             </div>
 
             <!-- Signup Form -->
