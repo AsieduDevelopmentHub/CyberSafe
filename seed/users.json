@@ -1,0 +1,16 @@
+[
+  {
+    "uid": "sampleUser1",
+    "name": "Test User",
+    "email": "tester@example.com",
+    "photoURL": "https://ui-avatars.com/api/?name=Test+User",
+    "progress": {
+      "overall": 0,
+      "completedModules": [],
+      "currentStreak": 0,
+      "lastActivity": null,
+      "totalPoints": 0,
+      "level": 1
+    }
+  }
+]

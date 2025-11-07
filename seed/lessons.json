@@ -1,0 +1,64 @@
+{
+  "phishing": [
+    {
+      "id": "phishing-1",
+      "title": "What is Phishing?",
+      "contentHtml": "<p>Phishing is a social engineering attack where attackers impersonate trusted entities to steal credentials or information.</p>",
+      "videoId": "Y7zNlEMDmI4",
+      "duration": 180,
+      "order": 1
+    },
+    {
+      "id": "phishing-2",
+      "title": "Spotting Phishing Emails",
+      "contentHtml": "<p>Learn how to inspect headers, check sender addresses, and spot suspicious links.</p>",
+      "videoId": "R12_y2BhKbE",
+      "duration": 390,
+      "order": 2
+    },
+    {
+      "id": "phishing-3",
+      "title": "Responding to Phishing Attempts",
+      "contentHtml": "<p>Steps to report and remediate phishing incidents.</p>",
+      "videoId": "XBkzBrXlle0",
+      "duration": 408,
+      "order": 3
+    }
+  ],
+  "passwords": [
+    {
+      "id": "passwords-1",
+      "title": "Creating Strong Passwords",
+      "contentHtml": "<p>Techniques for building strong, memorable passwords and why password managers help.</p>",
+      "videoId": "Pm9D-h7FqV4",
+      "duration": 270,
+      "order": 1
+    },
+    {
+      "id": "passwords-2",
+      "title": "Using Password Managers",
+      "contentHtml": "<p>How to choose and use a password manager safely.</p>",
+      "videoId": "zuvUj7GaZU8",
+      "duration": 559,
+      "order": 2
+    }
+  ],
+  "social": [
+    {
+      "id": "social-1",
+      "title": "Social Engineering Techniques",
+      "contentHtml": "<p>Common manipulation tactics and real-world examples.</p>",
+      "videoId": "v7VTJhkJUUY",
+      "duration": 416,
+      "order": 1
+    },
+    {
+      "id": "social-2",
+      "title": "Defending Against Social Engineering",
+      "contentHtml": "<p>Practical steps to verify requests and reduce risk.</p>",
+      "videoId": "XEtvwzN_xJk",
+      "duration": 136,
+      "order": 2
+    }
+  ]
+}

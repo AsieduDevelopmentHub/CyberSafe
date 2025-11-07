@@ -10,7 +10,7 @@ class ModuleContentManager {
                 color: "#00B8D9",
                 category: "Foundation",
                 duration: "45 min",
-                lessons: 5,
+                lessons: 3,
                 videos: [
                     { 
                         id: 'Y7zNlEMDmI4', 
@@ -66,14 +66,6 @@ class ModuleContentManager {
                                     <i class="fas fa-sms"></i>
                                     <strong>Smishing:</strong> Phishing attacks delivered via SMS/text messages
                                 </div>
-                                <div class="technique-item">
-                                    <i class="fas fa-phone"></i>
-                                    <strong>Vishing:</strong> Voice-based phishing using phone calls
-                                </div>
-                                <div class="technique-item">
-                                    <i class="fas fa-qrcode"></i>
-                                    <strong>Quishing:</strong> QR code-based phishing attacks
-                                </div>
                             </div>
 
                             <div class="stat-box">
@@ -120,145 +112,23 @@ class ModuleContentManager {
                                         <p>Macro-enabled documents or executable files</p>
                                     </div>
                                 </div>
-                                <div class="warning-item low">
-                                    <i class="fas fa-user"></i>
-                                    <div>
-                                        <strong>Generic Greetings</strong>
-                                        <p>"Dear Customer" instead of personalized addressing</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h4>Practical Exercise:</h4>
-                            <div class="exercise-box">
-                                <p><strong>Scenario:</strong> You receive an email from "security@paypa1.com" (note the number 1 instead of L) requesting immediate password verification. The link shows "paypal.com" but hovering reveals "paypa1-security.xyz".</p>
-                                <p><strong>Analysis Steps:</strong></p>
-                                <ol>
-                                    <li>Check sender email address carefully</li>
-                                    <li>Hover over all links without clicking</li>
-                                    <li>Look for spelling errors in domain names</li>
-                                    <li>Verify through official app or website</li>
-                                </ol>
                             </div>
                         `
                     },
                     {
-                        title: "Psychological Manipulation Techniques",
+                        title: "Protection & Response Strategies",
                         content: `
-                            <h3>Understanding Social Engineering Psychology</h3>
-                            <p>Phishers exploit fundamental psychological principles to manipulate victims. Recognizing these tactics is key to defense.</p>
-                            
-                            <h4>Key Psychological Principles:</h4>
-                            <div class="psychology-grid">
-                                <div class="psych-principle">
-                                    <h5>Authority Principle</h5>
-                                    <p>People tend to obey authority figures. Phishers impersonate executives, IT staff, or government officials.</p>
-                                    <div class="example">"This is IT Security - we need your password immediately"</div>
-                                </div>
-                                <div class="psych-principle">
-                                    <h5>Urgency & Scarcity</h5>
-                                    <p>Creating time pressure prevents careful consideration and verification.</p>
-                                    <div class="example">"Your account will be suspended in 24 hours if you don't act now"</div>
-                                </div>
-                                <div class="psych-principle">
-                                    <h5>Social Proof</h5>
-                                    <p>Suggesting others have already complied increases likelihood of action.</p>
-                                    <div class="example">"All other department heads have already updated their credentials"</div>
-                                </div>
-                                <div class="psych-principle">
-                                    <h5>Reciprocity</h5>
-                                    <p>Offering something first creates obligation to reciprocate.</p>
-                                    <div class="example">"We've credited $50 to your account, now please verify your details"</div>
-                                </div>
-                            </div>
-
-                            <h4>Advanced Manipulation Tactics:</h4>
-                            <ul>
-                                <li><strong>Pretexting:</strong> Creating false scenarios to obtain information</li>
-                                <li><strong>Baiting:</strong> Offering something desirable in exchange for access</li>
-                                <li><strong>Quid Pro Quo:</strong> Offering a service in return for information</li>
-                                <li><strong>Tailgating:</strong> Following authorized personnel into secure areas</li>
-                            </ul>
-
-                            <div class="case-study">
-                                <h4>Real Case Study: Business Email Compromise</h4>
-                                <p><strong>Incident:</strong> A finance employee received an email from "CEO@company.com" requesting urgent wire transfer for acquisition. The email used the CEO's actual speaking style and referenced recent company events.</p>
-                                <p><strong>Outcome:</strong> $1.2 million transferred to criminal account</p>
-                                <p><strong>Lessons Learned:</strong> Always verify financial requests through secondary channels, regardless of apparent authenticity.</p>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "Technical Defense Mechanisms",
-                        content: `
-                            <h3>Enterprise-Grade Phishing Protection</h3>
+                            <h3>Multi-Layered Defense Approach</h3>
                             <p>Implementing layered security controls significantly reduces phishing success rates.</p>
                             
-                            <h4>Email Security Controls:</h4>
-                            <div class="security-controls">
-                                <div class="control-category">
-                                    <h5>Preventive Controls</h5>
-                                    <ul>
-                                        <li><strong>DMARC/DKIM/SPF:</strong> Email authentication protocols</li>
-                                        <li><strong>Advanced Threat Protection:</strong> AI-based email filtering</li>
-                                        <li><strong>URL Rewriting:</strong> Scan and rewrite suspicious links</li>
-                                        <li><strong>Attachment Sandboxing:</strong> Execute attachments in isolated environment</li>
-                                    </ul>
-                                </div>
-                                <div class="control-category">
-                                    <h5>Detective Controls</h5>
-                                    <ul>
-                                        <li><strong>SIEM Integration:</strong> Correlate email events with other logs</li>
-                                        <li><strong>User Behavior Analytics:</strong> Detect anomalous activity patterns</li>
-                                        <li><strong>Phishing Simulations:</strong> Regular testing and training</li>
-                                        <li><strong>Incident Response Playbooks:</strong> Standardized response procedures</li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <h4>Technical Controls:</h4>
+                            <ul>
+                                <li><strong>Email Filtering:</strong> Advanced threat protection systems</li>
+                                <li><strong>Multi-Factor Authentication:</strong> Critical for account protection</li>
+                                <li><strong>Web Filtering:</strong> Block known malicious websites</li>
+                            </ul>
 
-                            <h4>Multi-Factor Authentication (MFA):</h4>
-                            <p>MFA is the single most effective control against credential phishing. Even if passwords are compromised, attackers cannot access accounts without the second factor.</p>
-                            
-                            <div class="mfa-comparison">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>MFA Type</th>
-                                            <th>Security Level</th>
-                                            <th>User Experience</th>
-                                            <th>Recommendation</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>SMS/Text</td>
-                                            <td>Medium</td>
-                                            <td>Good</td>
-                                            <td>Adequate for most users</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Authenticator Apps</td>
-                                            <td>High</td>
-                                            <td>Excellent</td>
-                                            <td>Recommended for all users</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Hardware Tokens</td>
-                                            <td>Very High</td>
-                                            <td>Fair</td>
-                                            <td>For high-value accounts</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Biometric</td>
-                                            <td>High</td>
-                                            <td>Excellent</td>
-                                            <td>Where supported</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <h4>Security Awareness Best Practices:</h4>
+                            <h4>Human Controls:</h4>
                             <div class="best-practices">
                                 <div class="practice-item">
                                     <i class="fas fa-check-circle"></i>
@@ -270,96 +140,14 @@ class ModuleContentManager {
                                 </div>
                                 <div class="practice-item">
                                     <i class="fas fa-check-circle"></i>
-                                    <span>Use password managers to avoid typing credentials</span>
+                                    <span>Report suspicious emails immediately</span>
                                 </div>
-                                <div class="practice-item">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Keep software and browsers updated</span>
-                                </div>
-                                <div class="practice-item">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Report suspicious emails to IT security immediately</span>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "Incident Response & Recovery",
-                        content: `
-                            <h3>Responding to Phishing Incidents</h3>
-                            <p>Even with robust defenses, some phishing attempts may succeed. Having a clear response plan is crucial.</p>
-                            
-                            <h4>Immediate Response Actions:</h4>
-                            <div class="response-steps">
-                                <div class="step">
-                                    <div class="step-number">1</div>
-                                    <div class="step-content">
-                                        <strong>Contain the Incident</strong>
-                                        <p>Disconnect affected systems from network, reset compromised credentials, revoke session tokens</p>
-                                    </div>
-                                </div>
-                                <div class="step">
-                                    <div class="step-number">2</div>
-                                    <div class="step-content">
-                                        <strong>Preserve Evidence</strong>
-                                        <p>Save email headers, don't delete anything, take screenshots of suspicious activity</p>
-                                    </div>
-                                </div>
-                                <div class="step">
-                                    <div class="step-number">3</div>
-                                    <div class="step-content">
-                                        <strong>Notify Stakeholders</strong>
-                                        <p>Inform IT security, management, and potentially affected parties based on data classification</p>
-                                    </div>
-                                </div>
-                                <div class="step">
-                                    <div class="step-number">4</div>
-                                    <div class="step-content">
-                                        <strong>Begin Investigation</strong>
-                                        <p>Determine scope of compromise, identify data accessed, trace attacker activities</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h4>Forensic Investigation Techniques:</h4>
-                            <ul>
-                                <li><strong>Email Header Analysis:</strong> Trace email origin and routing</li>
-                                <li><strong>Log Analysis:</strong> Review authentication and access logs</li>
-                                <li><strong>Malware Analysis:</strong> Examine any downloaded content</li>
-                                <li><strong>Network Traffic Analysis:</strong> Identify command and control communications</li>
-                            </ul>
-
-                            <h4>Recovery and Lessons Learned:</h4>
-                            <div class="recovery-plan">
-                                <div class="recovery-item">
-                                    <h5>Communication Plan</h5>
-                                    <p>Develop clear messaging for internal and external stakeholders. Be transparent about what happened and what you're doing about it.</p>
-                                </div>
-                                <div class="recovery-item">
-                                    <h5>Security Enhancements</h5>
-                                    <p>Implement additional controls based on incident findings. Consider enhanced monitoring or additional authentication requirements.</p>
-                                </div>
-                                <div class="recovery-item">
-                                    <h5>Training Updates</h5>
-                                    <p>Incorporate lessons learned into security awareness training. Use actual examples from the incident.</p>
-                                </div>
-                            </div>
-
-                            <div class="compliance-section">
-                                <h4>Regulatory Considerations:</h4>
-                                <p>Depending on your industry and location, phishing incidents may trigger regulatory reporting requirements:</p>
-                                <ul>
-                                    <li><strong>GDPR:</strong> 72-hour notification requirement for data breaches</li>
-                                    <li><strong>HIPAA:</strong> Breach notification rule for protected health information</li>
-                                    <li><strong>SOX:</strong> Material incidents may require disclosure</li>
-                                    <li><strong>State Laws:</strong> Various breach notification requirements</li>
-                                </ul>
                             </div>
                         `
                     }
                 ],
                 quiz: {
-                    title: "Phishing Awareness Certification Quiz",
+                    title: "Phishing Awareness Quiz",
                     questions: [
                         {
                             id: 1,
@@ -432,54 +220,6 @@ class ModuleContentManager {
                             ],
                             correctAnswer: 2,
                             explanation: "Whaling attacks specifically target high-level executives like CEOs and CFOs, using highly personalized social engineering tactics."
-                        },
-                        {
-                            id: 7,
-                            question: "Which header should you examine to verify an email's true origin?",
-                            options: [
-                                "Subject header",
-                                "Received headers",
-                                "Date header",
-                                "Message-ID header"
-                            ],
-                            correctAnswer: 1,
-                            explanation: "The 'Received' headers show the complete path an email took, making it possible to identify the true originating server and detect spoofing."
-                        },
-                        {
-                            id: 8,
-                            question: "What is the primary advantage of using a password manager against phishing?",
-                            options: [
-                                "It generates stronger passwords",
-                                "It automatically fills passwords only on legitimate sites",
-                                "It encrypts all passwords",
-                                "It syncs across devices"
-                            ],
-                            correctAnswer: 1,
-                            explanation: "Password managers only auto-fill credentials on websites they recognize, preventing credential entry on phishing sites even if users are tricked."
-                        },
-                        {
-                            id: 9,
-                            question: "Which regulatory requirement typically mandates 72-hour breach notification?",
-                            options: [
-                                "HIPAA",
-                                "GDPR",
-                                "PCI DSS",
-                                "SOX"
-                            ],
-                            correctAnswer: 1,
-                            explanation: "GDPR (General Data Protection Regulation) requires organizations to report personal data breaches to authorities within 72 hours of discovery."
-                        },
-                        {
-                            id: 10,
-                            question: "What is the most effective way to verify a suspicious financial request?",
-                            options: [
-                                "Reply to the email asking for confirmation",
-                                "Call the requester using a known, verified number",
-                                "Check the email signature for contact information",
-                                "Forward the email to your manager"
-                            ],
-                            correctAnswer: 1,
-                            explanation: "Always use a previously known, verified phone number (not from the suspicious email) to confirm financial requests through a different communication channel."
                         }
                     ],
                     passingScore: 80
@@ -487,34 +227,34 @@ class ModuleContentManager {
             },
             passwords: {
                 id: 'passwords',
-                title: "Password Security & Management",
-                description: "Master modern password security practices and credential management",
+                title: "Password Security",
+                description: "Create strong passwords and manage them securely using modern best practices",
                 icon: "fas fa-key",
                 color: "#FF6F00",
                 category: "Foundation",
-                duration: "40 min",
-                lessons: 5,
+                duration: "35 min",
+                lessons: 3,
                 videos: [
                     { 
                         id: 'CNMKuqb3xFk', 
-                        title: 'Fundamentals of Password Security', 
-                        description: 'Understanding why password security matters in modern cybersecurity',
+                        title: 'Why Password Security Matters', 
+                        description: 'Understanding the critical importance of password security in modern cybersecurity',
                         duration: '1:55', 
                         provider: 'Keeper Security',
                         embedAllowed: true
                     },
                     { 
                         id: 'Pm9D-h7FqV4', 
-                        title: 'Creating Cryptographically Strong Passwords', 
-                        description: 'Advanced techniques for generating and managing secure passwords',
+                        title: 'Creating Strong Passwords - Best Practices', 
+                        description: 'Learn how to create secure passwords that are hard to crack',
                         duration: '4:30', 
                         provider: 'CyberSafetySimplified',
                         embedAllowed: true
                     },
                     { 
                         id: 'zuvUj7GaZU8', 
-                        title: 'Enterprise Password Management Strategies', 
-                        description: 'Implementing password managers in organizational environments',
+                        title: 'Password Managers Complete Guide', 
+                        description: 'Comprehensive guide to using password managers effectively and securely',
                         duration: '9:19', 
                         provider: 'Cybernews',
                         embedAllowed: true
@@ -531,10 +271,7 @@ class ModuleContentManager {
                             <ul>
                                 <li><strong>1960s:</strong> CTSS system introduces first passwords</li>
                                 <li><strong>1970s:</strong> Unix crypt algorithm hashes passwords</li>
-                                <li><strong>1980s:</strong> Dictionary attacks emerge</li>
-                                <li><strong>1990s:</strong> Password policies become standardized</li>
                                 <li><strong>2000s:</strong> Massive data breaches reveal password weaknesses</li>
-                                <li><strong>2010s:</strong> NIST revises password guidelines based on research</li>
                                 <li><strong>2020s:</strong> Passwordless authentication gains traction</li>
                             </ul>
 
@@ -552,10 +289,6 @@ class ModuleContentManager {
                                     <i class="fas fa-rainbow"></i>
                                     <strong>Rainbow Tables:</strong> Precomputed hash databases
                                 </div>
-                                <div class="threat-item">
-                                    <i class="fas fa-phishing"></i>
-                                    <strong>Credential Stuffing:</strong> Reusing breached passwords
-                                </div>
                             </div>
 
                             <div class="stat-box">
@@ -563,7 +296,6 @@ class ModuleContentManager {
                                 <p>• 81% of hacking-related breaches use stolen or weak passwords</p>
                                 <p>• 65% of people reuse passwords across multiple sites</p>
                                 <p>• Average user has 100+ passwords to remember</p>
-                                <p>• 43% of people have shared passwords with others</p>
                             </div>
                         `
                     },
@@ -579,50 +311,9 @@ class ModuleContentManager {
                                 <li><strong>Avoid complexity requirements</strong> that lead to predictable patterns</li>
                                 <li><strong>Screen against known breached passwords</strong></li>
                                 <li><strong>No mandatory periodic resets</strong> unless compromise suspected</li>
-                                <li><strong>Encourage passphrases</strong> over traditional passwords</li>
                             </ul>
 
-                            <h4>Password Strength Comparison:</h4>
-                            <div class="password-comparison">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Password</th>
-                                            <th>Strength</th>
-                                            <th>Time to Crack</th>
-                                            <th>Memorability</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="weak">
-                                            <td>P@ssw0rd123!</td>
-                                            <td>Weak</td>
-                                            <td>3 hours</td>
-                                            <td>Medium</td>
-                                        </tr>
-                                        <tr class="medium">
-                                            <td>Blue42$ky!Rain9</td>
-                                            <td>Medium</td>
-                                            <td>2 months</td>
-                                            <td>Low</td>
-                                        </tr>
-                                        <tr class="strong">
-                                            <td>correct-horse-battery-staple</td>
-                                            <td>Strong</td>
-                                            <td>Centuries</td>
-                                            <td>High</td>
-                                        </tr>
-                                        <tr class="very-strong">
-                                            <td>TropicalSunset@Beach2024!</td>
-                                            <td>Very Strong</td>
-                                            <td>Millennia</td>
-                                            <td>High</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <h4>Advanced Creation Techniques:</h4>
+                            <h4>Password Creation Techniques:</h4>
                             <div class="technique-grid">
                                 <div class="technique">
                                     <h5>Diceware Method</h5>
@@ -634,18 +325,43 @@ class ModuleContentManager {
                                     <p>Create a memorable sentence and use first letters or a pattern.</p>
                                     <div class="example">Example: "My first car was a Honda Civic in 2008!" → MfcwaHCi2008!</div>
                                 </div>
-                                <div class="technique">
-                                    <h5>Keyboard Walking</h5>
-                                    <p>Create patterns across keyboard rows without using actual words.</p>
-                                    <div class="example">Example: 1qazXSW@3edcVFR$</div>
-                                </div>
                             </div>
                         `
                     },
-                    // ... Additional lessons for passwords module
+                    {
+                        title: "Password Management Solutions",
+                        content: `
+                            <h3>Enterprise Password Management</h3>
+                            <p>Password managers are essential tools for modern password security, providing both convenience and enhanced protection.</p>
+                            
+                            <h4>Benefits of Password Managers:</h4>
+                            <ul>
+                                <li><strong>Generate Strong Passwords:</strong> Create unique, complex passwords for each account</li>
+                                <li><strong>Auto-fill Protection:</strong> Only fill credentials on legitimate sites</li>
+                                <li><strong>Breach Monitoring:</strong> Alert when passwords appear in data breaches</li>
+                                <li><strong>Secure Sharing:</strong> Safely share passwords with family or team members</li>
+                            </ul>
+
+                            <h4>Choosing a Password Manager:</h4>
+                            <div class="comparison-grid">
+                                <div class="feature-item">
+                                    <strong>Zero-Knowledge Architecture</strong>
+                                    <p>Your master password never leaves your device</p>
+                                </div>
+                                <div class="feature-item">
+                                    <strong>End-to-End Encryption</strong>
+                                    <p>All data encrypted before leaving your device</p>
+                                </div>
+                                <div class="feature-item">
+                                    <strong>Two-Factor Authentication</strong>
+                                    <p>Additional security layer for your vault</p>
+                                </div>
+                            </div>
+                        `
+                    }
                 ],
                 quiz: {
-                    title: "Password Security Certification Quiz",
+                    title: "Password Security Quiz",
                     questions: [
                         {
                             id: 1,
@@ -669,9 +385,56 @@ class ModuleContentManager {
                                 "Personally meaningful words with substitutions"
                             ],
                             correctAnswer: 1,
-                            explanation: "Passphrases combining multiple random words provide excellent security while remaining memorable, avoiding the predictable patterns of complex passwords."
+                            explanation: "Passphrases combining multiple random words provide excellent security while remaining memorable, avoiding predictable patterns of complex passwords."
                         },
-                        // ... 8 more questions for passwords quiz
+                        {
+                            id: 3,
+                            question: "What is the primary security advantage of using a password manager?",
+                            options: [
+                                "It automatically changes your passwords weekly",
+                                "It prevents you from needing to remember any passwords",
+                                "It allows using unique strong passwords for every account",
+                                "It encrypts all your internet traffic"
+                            ],
+                            correctAnswer: 2,
+                            explanation: "The key security benefit is enabling unique, strong passwords for every account without the memory burden, preventing credential stuffing attacks."
+                        },
+                        {
+                            id: 4,
+                            question: "Why has NIST recommended against mandatory password changes?",
+                            options: [
+                                "Passwords don't need to be changed if they're strong",
+                                "Frequent changes lead to predictable password patterns",
+                                "Modern encryption makes password changes unnecessary",
+                                "Users should decide when to change their passwords"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Research shows frequent mandatory changes cause users to create predictable patterns (Password1, Password2, etc.), reducing security."
+                        },
+                        {
+                            id: 5,
+                            question: "What is 'credential stuffing' in cybersecurity?",
+                            options: [
+                                "Adding extra characters to make passwords longer",
+                                "Using breached passwords to attack other accounts",
+                                "Filling password forms with random characters",
+                                "Storing multiple passwords for the same account"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Credential stuffing attacks use username/password pairs from previous breaches to attempt login on other services where people reuse credentials."
+                        },
+                        {
+                            id: 6,
+                            question: "Which feature is most critical when choosing a password manager?",
+                            options: [
+                                "Cloud synchronization across devices",
+                                "Zero-knowledge architecture",
+                                "Built-in password generator",
+                                "Family sharing capabilities"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Zero-knowledge architecture ensures the service provider cannot access your passwords, as encryption/decryption happens only on your device."
+                        }
                     ],
                     passingScore: 80
                 }
@@ -679,17 +442,211 @@ class ModuleContentManager {
             social: {
                 id: 'social',
                 title: "Social Engineering Defense",
-                description: "Master psychological manipulation recognition and defense strategies",
+                description: "Recognize and defend against psychological manipulation tactics used by attackers",
                 icon: "fas fa-users",
                 color: "#10B981",
                 category: "Intermediate",
-                duration: "50 min",
-                lessons: 5,
-                // ... comprehensive content for social engineering
+                duration: "40 min",
+                lessons: 3,
+                videos: [
+                    { 
+                        id: 'v7VTJhkJUUY', 
+                        title: 'Social Engineering Attacks Explained', 
+                        description: 'Learn about common social engineering techniques and real-world examples',
+                        duration: '6:56', 
+                        provider: 'MalwareFox',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: 'XEtvwzN_xJk', 
+                        title: 'How to Avoid Social Engineering Attacks', 
+                        description: 'Practical strategies to protect yourself from social engineering',
+                        duration: '2:16', 
+                        provider: 'Google Help',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: 'lc7scxvKQOo', 
+                        title: 'Social Engineering - Human Hacking', 
+                        description: 'Understanding manipulation tactics and psychological principles used by attackers',
+                        duration: '9:10', 
+                        provider: 'Garrett Myler',
+                        embedAllowed: true
+                    }
+                ],
+                lessonsContent: [
+                    {
+                        title: "Understanding Social Engineering",
+                        content: `
+                            <h3>What is Social Engineering?</h3>
+                            <p>Social engineering is the psychological manipulation of people into performing actions or divulging confidential information. Unlike traditional hacking that targets technical vulnerabilities, social engineering targets human psychology.</p>
+                            
+                            <h4>Common Social Engineering Attacks:</h4>
+                            <ul>
+                                <li><strong>Pretexting:</strong> Creating false scenarios to obtain information</li>
+                                <li><strong>Baiting:</strong> Offering something desirable in exchange for access</li>
+                                <li><strong>Quid Pro Quo:</strong> Offering a service in return for information</li>
+                                <li><strong>Tailgating:</strong> Following authorized personnel into secure areas</li>
+                            </ul>
+
+                            <h4>Psychological Principles Exploited:</h4>
+                            <div class="psychology-grid">
+                                <div class="psych-principle">
+                                    <h5>Authority Principle</h5>
+                                    <p>People tend to obey authority figures without question</p>
+                                </div>
+                                <div class="psych-principle">
+                                    <h5>Urgency & Scarcity</h5>
+                                    <p>Creating time pressure prevents careful consideration</p>
+                                </div>
+                                <div class="psych-principle">
+                                    <h5>Social Proof</h5>
+                                    <p>Suggesting others have complied increases likelihood of action</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "Recognizing Manipulation Tactics",
+                        content: `
+                            <h3>Identifying Social Engineering Attempts</h3>
+                            <p>Successful social engineering defense requires recognizing the subtle signs of manipulation in various contexts.</p>
+                            
+                            <h4>Common Manipulation Tactics:</h4>
+                            <div class="tactics-grid">
+                                <div class="tactic-item">
+                                    <i class="fas fa-clock"></i>
+                                    <strong>Creating Urgency</strong>
+                                    <p>"This must be done immediately or your account will be closed"</p>
+                                </div>
+                                <div class="tactic-item">
+                                    <i class="fas fa-gift"></i>
+                                    <strong>Offering Incentives</strong>
+                                    <p>"We'll give you a $50 credit if you verify your account now"</p>
+                                </div>
+                                <div class="tactic-item">
+                                    <i class="fas fa-users"></i>
+                                    <strong>Using Social Proof</strong>
+                                    <p>"All other team members have already completed this"</p>
+                                </div>
+                            </div>
+
+                            <h4>Real-World Scenarios:</h4>
+                            <div class="scenario-box">
+                                <strong>Vishing Attack:</strong> Caller claims to be from "Microsoft Support" reporting viruses on your computer and requests remote access to "fix" the issue.
+                            </div>
+                            <div class="scenario-box">
+                                <strong>Baiting Scenario:</strong> USB drives labeled "Confidential" or "Salary Information" left in parking lots or restrooms.
+                            </div>
+                        `
+                    },
+                    {
+                        title: "Defense Strategies & Best Practices",
+                        content: `
+                            <h3>Building Social Engineering Resilience</h3>
+                            <p>Effective defense against social engineering requires both technical controls and human awareness.</p>
+                            
+                            <h4>Organizational Defenses:</h4>
+                            <ul>
+                                <li><strong>Security Awareness Training:</strong> Regular, engaging training sessions</li>
+                                <li><strong>Clear Security Policies:</strong> Well-defined procedures for verification</li>
+                                <li><strong>Incident Reporting:</strong> Easy-to-use reporting mechanisms</li>
+                                <li><strong>Physical Security:</strong> Access controls and visitor management</li>
+                            </ul>
+
+                            <h4>Personal Defense Techniques:</h4>
+                            <div class="defense-grid">
+                                <div class="defense-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Verify identity through independent channels</span>
+                                </div>
+                                <div class="defense-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Question urgency and too-good-to-be-true offers</span>
+                                </div>
+                                <div class="defense-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Implement the "need to know" principle</span>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
                 quiz: {
                     title: "Social Engineering Defense Quiz",
                     questions: [
-                        // ... 10 professional questions
+                        {
+                            id: 1,
+                            question: "What is the main goal of social engineering attacks?",
+                            options: [
+                                "To damage computer hardware",
+                                "To manipulate people into revealing information",
+                                "To spread computer viruses",
+                                "To test network security"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Social engineering aims to manipulate individuals into divulging confidential information or performing actions that compromise security."
+                        },
+                        {
+                            id: 2,
+                            question: "Which psychological principle involves people following instructions from perceived authority figures?",
+                            options: [
+                                "Reciprocity principle",
+                                "Authority principle",
+                                "Social proof principle",
+                                "Scarcity principle"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "The authority principle makes people more likely to comply with requests from individuals they perceive as having authority or expertise."
+                        },
+                        {
+                            id: 3,
+                            question: "What is 'pretexting' in social engineering?",
+                            options: [
+                                "Creating fake websites that look legitimate",
+                                "Using a fabricated scenario to obtain information",
+                                "Sending mass emails to many potential victims",
+                                "Installing malware through email attachments"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Pretexting involves creating a false identity or scenario to establish legitimacy and trick victims into providing information or access."
+                        },
+                        {
+                            id: 4,
+                            question: "Which of the following is the best defense against social engineering?",
+                            options: [
+                                "Using complex passwords",
+                                "Verifying requests through independent channels",
+                                "Installing antivirus software",
+                                "Using a VPN service"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Verifying unusual requests through known, independent contact methods is the most effective defense against social engineering attempts."
+                        },
+                        {
+                            id: 5,
+                            question: "What is 'tailgating' in physical social engineering?",
+                            options: [
+                                "Sending follow-up emails after initial contact",
+                                "Following someone through a secure entrance",
+                                "Monitoring social media for personal information",
+                                "Creating fake social media profiles"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Tailgating involves following an authorized person through a secure entrance without proper authentication."
+                        },
+                        {
+                            id: 6,
+                            question: "Why do social engineers often create a sense of urgency?",
+                            options: [
+                                "To make the attack more exciting",
+                                "To pressure victims into acting without thinking",
+                                "To demonstrate their technical skills",
+                                "To test how people handle stress"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Creating urgency prevents victims from carefully considering the situation and conducting proper verification, increasing the attack's success rate."
+                        }
                     ],
                     passingScore: 80
                 }
@@ -697,17 +654,211 @@ class ModuleContentManager {
             network: {
                 id: 'network',
                 title: "Network Security Fundamentals",
-                description: "Comprehensive network protection and secure communication practices",
+                description: "Secure your network connections and understand safe browsing practices",
                 icon: "fas fa-wifi",
                 color: "#8B5CF6",
                 category: "Intermediate",
-                duration: "55 min",
-                lessons: 5,
-                // ... comprehensive content for network security
+                duration: "45 min",
+                lessons: 3,
+                videos: [
+                    { 
+                        id: '_-DekqEyAV0', 
+                        title: 'VPNs Explained - Privacy & Security', 
+                        description: 'Comprehensive understanding of VPN technology and security benefits',
+                        duration: '5:49', 
+                        provider: 'Simplilearn',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: 'aO858HyFbKI', 
+                        title: 'Safe Browsing Habits for 2025', 
+                        description: 'Latest best practices for secure internet browsing and threat avoidance',
+                        duration: '4:01', 
+                        provider: 'Kaspersky',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: '9GZlVOafYTg', 
+                        title: 'Firewalls and Network Security Basics', 
+                        description: 'Understanding firewalls and essential network protection mechanisms',
+                        duration: '5:38', 
+                        provider: 'Simplilearn',
+                        embedAllowed: true
+                    }
+                ],
+                lessonsContent: [
+                    {
+                        title: "Network Security Basics",
+                        content: `
+                            <h3>Understanding Network Threats</h3>
+                            <p>Network security involves implementing measures to protect the usability, reliability, integrity, and safety of network and data.</p>
+                            
+                            <h4>Common Network Threats:</h4>
+                            <ul>
+                                <li><strong>Man-in-the-Middle Attacks:</strong> Intercepting communications between two parties</li>
+                                <li><strong>DNS Spoofing:</strong> Redirecting traffic to malicious websites</li>
+                                <li><strong>Packet Sniffing:</strong> Capturing and analyzing network traffic</li>
+                                <li><strong>Rogue Access Points:</strong> Unauthorized wireless access points</li>
+                            </ul>
+
+                            <h4>Essential Network Security Components:</h4>
+                            <div class="component-grid">
+                                <div class="component-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <strong>Firewalls</strong>
+                                    <p>Monitor and control incoming and outgoing network traffic</p>
+                                </div>
+                                <div class="component-item">
+                                    <i class="fas fa-user-shield"></i>
+                                    <strong>VPNs</strong>
+                                    <p>Create secure encrypted connections over public networks</p>
+                                </div>
+                                <div class="component-item">
+                                    <i class="fas fa-lock"></i>
+                                    <strong>Encryption</strong>
+                                    <p>Protect data in transit from interception</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "Secure Browsing Practices",
+                        content: `
+                            <h3>Safe Internet Usage Guidelines</h3>
+                            <p>Adopting secure browsing habits is crucial for protecting against online threats and maintaining privacy.</p>
+                            
+                            <h4>Browser Security Features:</h4>
+                            <ul>
+                                <li><strong>HTTPS Everywhere:</strong> Ensure encrypted connections to websites</li>
+                                <li><strong>Privacy Extensions:</strong> Use ad-blockers and privacy tools</li>
+                                <li><strong>Regular Updates:</strong> Keep browsers and plugins current</li>
+                                <li><strong>Cookie Management:</strong> Control tracking and third-party cookies</li>
+                            </ul>
+
+                            <h4>Safe Browsing Habits:</h4>
+                            <div class="habits-grid">
+                                <div class="habit-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Verify website security certificates</span>
+                                </div>
+                                <div class="habit-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Avoid public Wi-Fi for sensitive activities</span>
+                                </div>
+                                <div class="habit-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Use incognito mode for private browsing</span>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "VPN & Encryption Technologies",
+                        content: `
+                            <h3>Virtual Private Networks Explained</h3>
+                            <p>VPNs create secure, encrypted tunnels for internet traffic, protecting data from interception and maintaining privacy.</p>
+                            
+                            <h4>How VPNs Work:</h4>
+                            <ul>
+                                <li><strong>Encryption:</strong> Scrambles data so it's unreadable to interceptors</li>
+                                <li><strong>Tunneling:</strong> Creates secure pathways through public networks</li>
+                                <li><strong>IP Masking:</strong> Hides your real IP address and location</li>
+                                <li><strong>Kill Switch:</strong> Automatically disconnects if VPN fails</li>
+                            </ul>
+
+                            <h4>Choosing a VPN Service:</h4>
+                            <div class="vpn-criteria">
+                                <div class="criterion">
+                                    <strong>No-Logs Policy</strong>
+                                    <p>Provider doesn't store your activity data</p>
+                                </div>
+                                <div class="criterion">
+                                    <strong>Strong Encryption</strong>
+                                    <p>Uses military-grade encryption protocols</p>
+                                </div>
+                                <div class="criterion">
+                                    <strong>Server Locations</strong>
+                                    <p>Multiple geographic options for better performance</p>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
                 quiz: {
-                    title: "Network Security Certification Quiz",
+                    title: "Network Security Quiz",
                     questions: [
-                        // ... 10 professional questions
+                        {
+                            id: 1,
+                            question: "What does VPN stand for and what is its primary purpose?",
+                            options: [
+                                "Virtual Private Network - to hide internet activity from ISP",
+                                "Very Protected Network - to increase internet speed",
+                                "Virtual Public Network - to share files securely",
+                                "Verified Private Network - to block malicious websites"
+                            ],
+                            correctAnswer: 0,
+                            explanation: "VPN stands for Virtual Private Network, and its primary purpose is to create an encrypted tunnel that hides your internet activity from your ISP and other observers."
+                        },
+                        {
+                            id: 2,
+                            question: "What is the main security risk of using public Wi-Fi networks?",
+                            options: [
+                                "Slower internet speeds",
+                                "Man-in-the-middle attacks and data interception",
+                                "Automatic connection to malicious networks",
+                                "Increased battery consumption"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Public Wi-Fi networks are vulnerable to man-in-the-middle attacks where attackers can intercept unencrypted data transmissions."
+                        },
+                        {
+                            id: 3,
+                            question: "What should you look for in a website's address bar to ensure a secure connection?",
+                            options: [
+                                "A green background color",
+                                "The text 'Secure' displayed",
+                                "A padlock icon and HTTPS protocol",
+                                "The website owner's name"
+                            ],
+                            correctAnswer: 2,
+                            explanation: "The padlock icon and HTTPS (instead of HTTP) indicate the connection is encrypted and secure against eavesdropping."
+                        },
+                        {
+                            id: 4,
+                            question: "What is the primary function of a firewall in network security?",
+                            options: [
+                                "To detect and remove viruses",
+                                "To monitor and control network traffic",
+                                "To encrypt data transmissions",
+                                "To block spam emails"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Firewalls monitor incoming and outgoing network traffic and decide whether to allow or block specific traffic based on security rules."
+                        },
+                        {
+                            id: 5,
+                            question: "Why is it important to keep your router's firmware updated?",
+                            options: [
+                                "To get new features and better Wi-Fi range",
+                                "To patch security vulnerabilities and protect your network",
+                                "To improve internet service provider compatibility",
+                                "To reduce electricity consumption"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Router firmware updates often include critical security patches that protect against newly discovered vulnerabilities that attackers could exploit."
+                        },
+                        {
+                            id: 6,
+                            question: "What does a 'kill switch' feature do in a VPN?",
+                            options: [
+                                "Turns off the VPN when not needed to save bandwidth",
+                                "Automatically disconnects the internet if VPN connection drops",
+                                "Blocks specific websites from being accessed",
+                                "Shuts down the computer if malware is detected"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "A VPN kill switch automatically disconnects your device from the internet if the VPN connection fails, preventing data leaks."
+                        }
                     ],
                     passingScore: 80
                 }
@@ -715,17 +866,217 @@ class ModuleContentManager {
             data: {
                 id: 'data',
                 title: "Data Protection & Privacy",
-                description: "Advanced data security, encryption, and privacy compliance",
+                description: "Secure your personal information and understand data privacy regulations",
                 icon: "fas fa-database",
                 color: "#EF4444",
                 category: "Advanced",
-                duration: "60 min",
-                lessons: 5,
-                // ... comprehensive content for data protection
+                duration: "50 min",
+                lessons: 3,
+                videos: [
+                    { 
+                        id: 'NpQPBKvYYlc', 
+                        title: 'Data Protection Principles - GDPR Basics', 
+                        description: 'Understanding data security fundamentals and privacy regulations',
+                        duration: '13:49', 
+                        provider: 'Xploit Cyber Security',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: '5epUUK3jqRQ', 
+                        title: 'Personal Data Security in Digital Age', 
+                        description: 'Strategies for protecting personal information in modern digital environments',
+                        duration: '10:07', 
+                        provider: 'MS Learning',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: 'p1buq8pAuyE', 
+                        title: 'Data Privacy Tips Everyone Should Know', 
+                        description: 'Essential practices for maintaining data privacy and security',
+                        duration: '1:09', 
+                        provider: 'RapidTech Bites',
+                        embedAllowed: true
+                    }
+                ],
+                lessonsContent: [
+                    {
+                        title: "Data Protection Fundamentals",
+                        content: `
+                            <h3>Understanding Data Classification</h3>
+                            <p>Data protection begins with understanding what data you have and its sensitivity level. Proper classification enables appropriate security measures.</p>
+                            
+                            <h4>Data Classification Levels:</h4>
+                            <ul>
+                                <li><strong>Public:</strong> Information available to anyone (website content, marketing materials)</li>
+                                <li><strong>Internal:</strong> Company-only information (policies, procedures)</li>
+                                <li><strong>Confidential:</strong> Sensitive business information (financial data, strategic plans)</li>
+                                <li><strong>Restricted:</strong> Highly sensitive data (personal identifiers, health records)</li>
+                            </ul>
+
+                            <h4>Data Protection Principles:</h4>
+                            <div class="principles-grid">
+                                <div class="principle-item">
+                                    <i class="fas fa-user-shield"></i>
+                                    <strong>Confidentiality</strong>
+                                    <p>Protecting data from unauthorized access</p>
+                                </div>
+                                <div class="principle-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Integrity</strong>
+                                    <p>Ensuring data accuracy and completeness</p>
+                                </div>
+                                <div class="principle-item">
+                                    <i class="fas fa-unlock"></i>
+                                    <strong>Availability</strong>
+                                    <p>Ensuring authorized access when needed</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "Privacy Regulations & Compliance",
+                        content: `
+                            <h3>Global Data Privacy Regulations</h3>
+                            <p>Understanding major data protection laws is essential for compliance and avoiding significant penalties.</p>
+                            
+                            <h4>Key Regulations:</h4>
+                            <ul>
+                                <li><strong>GDPR (General Data Protection Regulation):</strong> European Union regulation with global impact</li>
+                                <li><strong>CCPA (California Consumer Privacy Act):</strong> California's comprehensive privacy law</li>
+                                <li><strong>HIPAA (Health Insurance Portability and Accountability Act):</strong> US healthcare data protection</li>
+                                <li><strong>PIPEDA (Personal Information Protection and Electronic Documents Act):</strong> Canadian privacy law</li>
+                            </ul>
+
+                            <h4>Individual Rights Under GDPR:</h4>
+                            <div class="rights-grid">
+                                <div class="right-item">
+                                    <i class="fas fa-eye"></i>
+                                    <strong>Right to Access</strong>
+                                    <p>Know what data is collected about you</p>
+                                </div>
+                                <div class="right-item">
+                                    <i class="fas fa-eraser"></i>
+                                    <strong>Right to Erasure</strong>
+                                    <p>Request deletion of your personal data</p>
+                                </div>
+                                <div class="right-item">
+                                    <i class="fas fa-ban"></i>
+                                    <strong>Right to Object</strong>
+                                    <p>Opt-out of data processing</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "Practical Data Protection Strategies",
+                        content: `
+                            <h3>Implementing Data Security Measures</h3>
+                            <p>Effective data protection requires both technical controls and organizational policies.</p>
+                            
+                            <h4>Technical Controls:</h4>
+                            <ul>
+                                <li><strong>Encryption:</strong> Protect data at rest and in transit</li>
+                                <li><strong>Access Controls:</strong> Role-based permissions and least privilege</li>
+                                <li><strong>Data Loss Prevention (DLP):</strong> Monitor and prevent data exfiltration</li>
+                                <li><strong>Backup and Recovery:</strong> Regular backups and tested recovery procedures</li>
+                            </ul>
+
+                            <h4>Organizational Measures:</h4>
+                            <div class="measures-grid">
+                                <div class="measure-item">
+                                    <i class="fas fa-file-contract"></i>
+                                    <strong>Data Processing Agreements</strong>
+                                    <p>Contracts with third parties handling your data</p>
+                                </div>
+                                <div class="measure-item">
+                                    <i class="fas fa-user-graduate"></i>
+                                    <strong>Employee Training</strong>
+                                    <p>Regular security awareness education</p>
+                                </div>
+                                <div class="measure-item">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    <strong>Incident Response Plans</strong>
+                                    <p>Prepared procedures for data breaches</p>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
                 quiz: {
-                    title: "Data Protection Professional Quiz",
+                    title: "Data Protection Quiz",
                     questions: [
-                        // ... 10 professional questions
+                        {
+                            id: 1,
+                            question: "What are the three core principles of data protection known as the CIA triad?",
+                            options: [
+                                "Confidentiality, Integrity, Availability",
+                                "Confidentiality, Insurance, Authentication",
+                                "Control, Integrity, Access",
+                                "Confidentiality, Identification, Authorization"
+                            ],
+                            correctAnswer: 0,
+                            explanation: "The CIA triad represents Confidentiality (protecting data from unauthorized access), Integrity (ensuring data accuracy), and Availability (ensuring authorized access)."
+                        },
+                        {
+                            id: 2,
+                            question: "What is the primary purpose of the GDPR (General Data Protection Regulation)?",
+                            options: [
+                                "To standardize data protection laws across Europe",
+                                "To require encryption of all personal data",
+                                "To ban data collection by companies",
+                                "To make data protection optional for businesses"
+                            ],
+                            correctAnswer: 0,
+                            explanation: "GDPR harmonizes data privacy laws across Europe and gives individuals control over their personal data while imposing strict rules on organizations."
+                        },
+                        {
+                            id: 3,
+                            question: "What does 'data minimization' mean in data protection?",
+                            options: [
+                                "Using the smallest possible data storage solutions",
+                                "Collecting only the data necessary for specific purposes",
+                                "Reducing data quality to save storage space",
+                                "Deleting all data after 30 days"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Data minimization means organizations should only collect and process personal data that is necessary for specific, explicit, and legitimate purposes."
+                        },
+                        {
+                            id: 4,
+                            question: "What is a Data Protection Impact Assessment (DPIA)?",
+                            options: [
+                                "A test to measure data storage capacity",
+                                "A process to identify and reduce data protection risks",
+                                "An audit of data backup procedures",
+                                "A survey of customer data preferences"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "A DPIA is a process designed to help organizations systematically analyze, identify, and minimize data protection risks of a project or system."
+                        },
+                        {
+                            id: 5,
+                            question: "What is the 'right to be forgotten' under GDPR?",
+                            options: [
+                                "The right to have personal data deleted under certain circumstances",
+                                "The right to anonymously browse the internet",
+                                "The right to opt-out of all data collection",
+                                "The right to use pseudonyms online"
+                            ],
+                            correctAnswer: 0,
+                            explanation: "The right to be forgotten allows individuals to request the deletion of their personal data when it's no longer necessary or if they withdraw consent."
+                        },
+                        {
+                            id: 6,
+                            question: "What is the main purpose of data encryption?",
+                            options: [
+                                "To make data transmission faster",
+                                "To convert data into unreadable format without proper key",
+                                "To compress data for efficient storage",
+                                "To organize data in structured formats"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Encryption converts data into an unreadable format (ciphertext) that can only be decrypted with the proper key, protecting it from unauthorized access."
+                        }
                     ],
                     passingScore: 80
                 }
@@ -733,17 +1084,208 @@ class ModuleContentManager {
             mobile: {
                 id: 'mobile',
                 title: "Mobile Security Management",
-                description: "Comprehensive mobile device and application security",
+                description: "Secure your mobile devices and understand app security best practices",
                 icon: "fas fa-mobile-alt",
                 color: "#F59E0B",
                 category: "Advanced",
-                duration: "45 min",
-                lessons: 5,
-                // ... comprehensive content for mobile security
+                duration: "40 min",
+                lessons: 3,
+                videos: [
+                    { 
+                        id: '8J8z8ekeYVQ', 
+                        title: 'Mobile Security - Essential Protection Tips', 
+                        description: 'Critical security practices for protecting smartphones and tablets',
+                        duration: '6:09', 
+                        provider: 'Certo Software',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: 'NSOJU5nV4v4', 
+                        title: 'Understanding App Permissions & Security', 
+                        description: 'How to manage app permissions for optimal security and privacy',
+                        duration: '2:10', 
+                        provider: 'ITCubed',
+                        embedAllowed: true
+                    },
+                    { 
+                        id: 'm_SN1CB3Kts', 
+                        title: 'Smartphone Security Complete Guide', 
+                        description: 'Comprehensive guide to securing mobile devices against modern threats',
+                        duration: '13:16', 
+                        provider: 'The Hated One',
+                        embedAllowed: true
+                    }
+                ],
+                lessonsContent: [
+                    {
+                        title: "Mobile Security Fundamentals",
+                        content: `
+                            <h3>Understanding Mobile Threat Landscape</h3>
+                            <p>Mobile devices face unique security challenges due to their portability, constant connectivity, and extensive personal data storage.</p>
+                            
+                            <h4>Common Mobile Threats:</h4>
+                            <ul>
+                                <li><strong>Malicious Apps:</strong> Apps designed to steal data or damage devices</li>
+                                <li><strong>Network Spoofing:</strong> Fake Wi-Fi networks that intercept data</li>
+                                <li><strong>Phishing Attacks:</strong> SMS and messaging-based social engineering</li>
+                                <li><strong>Device Theft/Loss:</strong> Physical access to unprotected devices</li>
+                            </ul>
+
+                            <h4>Mobile Security Statistics:</h4>
+                            <div class="stat-box">
+                                <p>• 98% of mobile malware targets Android devices</p>
+                                <p>• 1 in 36 mobile devices have high-risk apps installed</p>
+                                <p>• Mobile banking trojans increased by 80% in 2023</p>
+                                <p>• 60% of digital fraud now originates from mobile devices</p>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "App Security & Permissions Management",
+                        content: `
+                            <h3>Managing App Permissions Effectively</h3>
+                            <p>Understanding and controlling app permissions is crucial for protecting your privacy and security on mobile devices.</p>
+                            
+                            <h4>Critical App Permissions to Monitor:</h4>
+                            <ul>
+                                <li><strong>Location Services:</strong> Only allow when app functionality requires it</li>
+                                <li><strong>Camera & Microphone:</strong> Grant access only to trusted apps</li>
+                                <li><strong>Contacts & Messages:</strong> Be extremely selective with these permissions</li>
+                                <li><strong>Storage Access:</strong> Control which apps can read/write to device storage</li>
+                            </ul>
+
+                            <h4>App Security Best Practices:</h4>
+                            <div class="app-security-grid">
+                                <div class="practice-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Download apps only from official stores</span>
+                                </div>
+                                <div class="practice-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Read app reviews and check developer credibility</span>
+                                </div>
+                                <div class="practice-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Regularly review and update app permissions</span>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "Advanced Mobile Protection Strategies",
+                        content: `
+                            <h3>Enterprise Mobile Device Management</h3>
+                            <p>For organizations, managing mobile security requires comprehensive strategies and tools.</p>
+                            
+                            <h4>Mobile Device Management (MDM) Features:</h4>
+                            <ul>
+                                <li><strong>Remote Wipe:</strong> Erase device data if lost or stolen</li>
+                                <li><strong>App Whitelisting/Blacklisting:</strong> Control which apps can be installed</li>
+                                <li><strong>Policy Enforcement:</strong> Require passwords, encryption, and other security measures</li>
+                                <li><strong>Containerization:</strong> Separate work and personal data on devices</li>
+                            </ul>
+
+                            <h4>Personal Mobile Security Checklist:</h4>
+                            <div class="checklist-grid">
+                                <div class="checklist-item">
+                                    <input type="checkbox" checked disabled>
+                                    <span>Enable device encryption</span>
+                                </div>
+                                <div class="checklist-item">
+                                    <input type="checkbox" checked disabled>
+                                    <span>Use strong authentication (biometrics + PIN)</span>
+                                </div>
+                                <div class="checklist-item">
+                                    <input type="checkbox" checked disabled>
+                                    <span>Keep operating system and apps updated</span>
+                                </div>
+                                <div class="checklist-item">
+                                    <input type="checkbox" checked disabled>
+                                    <span>Use VPN on public Wi-Fi networks</span>
+                                </div>
+                                <div class="checklist-item">
+                                    <input type="checkbox" checked disabled>
+                                    <span>Enable remote find and wipe capabilities</span>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
                 quiz: {
-                    title: "Mobile Security Expert Quiz",
+                    title: "Mobile Security Quiz",
                     questions: [
-                        // ... 10 professional questions
+                        {
+                            id: 1,
+                            question: "Why should you be cautious about granting location permissions to mobile apps?",
+                            options: [
+                                "It drains battery life significantly",
+                                "It can reveal your physical movements and patterns",
+                                "It slows down app performance",
+                                "It uses excessive mobile data"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Location permissions can track your physical movements, daily routines, and sensitive locations like home and workplace, creating privacy and security risks."
+                        },
+                        {
+                            id: 2,
+                            question: "What is the primary security risk of using public Wi-Fi networks on mobile devices?",
+                            options: [
+                                "Automatic connection to malicious networks",
+                                "Man-in-the-middle attacks and data interception",
+                                "Permanent damage to device hardware",
+                                "Automatic installation of malicious apps"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Public Wi-Fi networks are often unsecured, allowing attackers to intercept unencrypted data transmissions and potentially steal sensitive information."
+                        },
+                        {
+                            id: 3,
+                            question: "What should you do before installing a new app on your mobile device?",
+                            options: [
+                                "Check if friends have installed it",
+                                "Read reviews and check app permissions",
+                                "Test it on a different device first",
+                                "Clear storage space for the new app"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Always review app permissions and read user reviews to understand what data the app accesses and whether it's trustworthy before installation."
+                        },
+                        {
+                            id: 4,
+                            question: "What is 'containerization' in mobile security?",
+                            options: [
+                                "Storing apps in separate folders for organization",
+                                "Isolating work data from personal data on devices",
+                                "Compressing app data to save storage space",
+                                "Grouping similar apps together for easy access"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "Containerization creates secure, isolated environments for work data, allowing organizations to protect corporate information while respecting personal privacy."
+                        },
+                        {
+                            id: 5,
+                            question: "Why is it important to keep your mobile operating system updated?",
+                            options: [
+                                "To get new features and better performance",
+                                "To receive critical security patches for vulnerabilities",
+                                "To maintain app store access and functionality",
+                                "To ensure compatibility with all accessories"
+                            ],
+                            correctAnswer: 1,
+                            explanation: "OS updates often include critical security patches that fix vulnerabilities that attackers could exploit to compromise your device and data."
+                        },
+                        {
+                            id: 6,
+                            question: "What is the most secure authentication method for mobile devices?",
+                            options: [
+                                "4-digit PIN code",
+                                "Pattern lock",
+                                "Biometrics combined with strong passcode",
+                                "Facial recognition alone"
+                            ],
+                            correctAnswer: 2,
+                            explanation: "Multi-factor authentication using biometrics (fingerprint/face) combined with a strong passcode provides the highest security level for mobile devices."
+                        }
                     ],
                     passingScore: 80
                 }
@@ -847,7 +1389,10 @@ class ModuleContentManager {
     }
 
     async checkQuizAccess() {
-        if (!this.currentModule) return;
+        if (!this.currentModule) {
+            console.error('❌ No current module selected');
+            return;
+        }
         
         console.log('🔍 Checking quiz access for module:', this.currentModule.id);
         
@@ -858,32 +1403,76 @@ class ModuleContentManager {
         }
         
         try {
+            // Get module progress from Firestore
             const moduleProgress = await window.firestoreService.getModuleProgress(user.uid, this.currentModule.id);
+            console.log('📊 Module progress data:', moduleProgress);
+
+            // For fault tolerance, use progress from any available data source
             const videosCompleted = moduleProgress?.videosCompleted || [];
             const totalVideos = this.currentModule.videos?.length || 0;
+            const currentProgress = moduleProgress?.progress || 0;
+
+            // Calculate completion percentage from available metrics
+            const videoCompletion = (videosCompleted.length / totalVideos) * 100;
             
-            console.log('📊 Quiz access check:', {
+            console.log('🎯 Access check details:', {
                 videosCompleted: videosCompleted.length,
-                totalVideos: totalVideos,
-                progress: moduleProgress?.progress || 0
+                totalVideos,
+                videoCompletion: videoCompletion.toFixed(1) + '%',
+                currentProgress: currentProgress.toFixed(1) + '%'
+            });
+
+            // Unified access check: Require 50% completion from any metric
+            const canAccessQuiz = videoCompletion >= 50 || currentProgress >= 50 || moduleProgress?.videosWatched === true;
+            
+            console.log('🔓 Quiz access decision:', {
+                videoCompletion: videoCompletion >= 50,
+                progressBased: currentProgress >= 50,
+                watchedFlag: moduleProgress?.videosWatched === true,
+                finalDecision: canAccessQuiz
             });
             
-            // Allow quiz if at least 70% of videos watched or progress is high
-            const completionRatio = totalVideos > 0 ? videosCompleted.length / totalVideos : 0;
-            const canAccessQuiz = completionRatio >= 0.7 || (moduleProgress?.progress || 0) >= 70;
-            
             if (canAccessQuiz) {
+                console.log('✅ Quiz access granted, starting quiz...');
                 this.startQuiz();
             } else {
+                console.log('❌ Quiz access denied, showing message');
                 this.showQuizAccessDenied();
             }
             
         } catch (error) {
             console.error('❌ Error checking quiz access:', error);
-            // Fallback: allow quiz but show warning
-            if (confirm('Unable to verify video completion. Start quiz anyway?')) {
-                this.startQuiz();
+            // Fallback with more lenient offline access
+            const fallbackAccess = await this.checkLocalProgress();
+            if (fallbackAccess) {
+                console.log('⚠️ Using offline fallback access');
+                if (confirm('Unable to verify online completion. You can start the quiz now, but your progress may not be saved properly. Continue anyway?')) {
+                    this.startQuiz();
+                }
+            } else {
+                this.showQuizAccessDenied();
             }
+        }
+    }
+
+    async checkLocalProgress() {
+        try {
+            const user = firebase.auth().currentUser;
+            if (!user) return false;
+            
+            // Check if we have local storage indicating completion
+            const localKey = `module_${this.currentModule.id}_completed_${user.uid}`;
+            const localCompletion = localStorage.getItem(localKey);
+            
+            if (localCompletion === 'true') {
+                console.log('📱 Found local completion record');
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('Error checking local progress:', error);
+            return false;
         }
     }
 
@@ -896,31 +1485,35 @@ class ModuleContentManager {
             <div class="quiz-access-denied">
                 <div class="access-denied-content">
                     <i class="fas fa-lock fa-3x"></i>
-                    <h3>Quiz Locked</h3>
-                    <p>Complete at least 70% of the module videos to unlock this quiz.</p>
+                    <h3>Quiz Not Yet Available</h3>
+                    <p>Complete at least 50% of the module to unlock the quiz:</p>
                     <div class="access-requirements">
                         <div class="requirement">
                             <i class="fas fa-play-circle"></i>
-                            <span>Watch module videos</span>
+                            <span>Watch the module videos</span>
+                        </div>
+                        <div class="requirement">
+                            <i class="fas fa-book"></i>
+                            <span>Review lesson materials</span>
                         </div>
                         <div class="requirement">
                             <i class="fas fa-check-circle"></i>
-                            <span>Complete video lessons</span>
-                        </div>
-                        <div class="requirement">
-                            <i class="fas fa-unlock"></i>
-                            <span>Quiz will unlock automatically</span>
+                            <span>Track your progress automatically</span>
                         </div>
                     </div>
+                    <div class="access-tip">
+                        <i class="fas fa-lightbulb"></i>
+                        <p>Tip: You can track your progress by watching videos and completing lessons. Your progress saves automatically.</p>
+                    </div>
                     <button class="btn-primary" onclick="window.moduleContentManager.switchTab('videos', document.querySelector('[data-tab=\\'videos\\']'))">
-                        <i class="fas fa-arrow-left"></i>
-                        Back to Videos
+                        <i class="fas fa-play-circle"></i>
+                        Start Learning
                     </button>
                 </div>
             </div>
         `;
         
-        // Switch to videos tab to help user complete requirements
+        // Switch to videos tab to help user get started
         const videosTabButton = document.querySelector('[data-tab="videos"]');
         if (videosTabButton) {
             this.switchTab('videos', videosTabButton);

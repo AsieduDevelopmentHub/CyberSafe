@@ -28,34 +28,52 @@ class QuizManager {
     }
 
     setupQuizEvents() {
+        // Get quiz elements
         const modal = document.getElementById('quizModal');
         const prevBtn = document.getElementById('prevQuestion');
         const nextBtn = document.getElementById('nextQuestion');
         const submitBtn = document.getElementById('submitQuiz');
 
+        // Store bound event handlers as properties to ensure they're the same instance
+        this.handlePrevClick = this.handlePrevClick || this.previousQuestion.bind(this);
+        this.handleNextClick = this.handleNextClick || this.nextQuestion.bind(this);
+        this.handleSubmitClick = this.handleSubmitClick || this.submitQuiz.bind(this);
+        this.handleModalClick = this.handleModalClick || ((e) => {
+            if (e.target === modal) {
+                this.closeQuiz();
+            }
+        });
+
+        // First remove any existing listeners
+        prevBtn?.removeEventListener('click', this.handlePrevClick);
+        nextBtn?.removeEventListener('click', this.handleNextClick);
+        submitBtn?.removeEventListener('click', this.handleSubmitClick);
+        modal?.removeEventListener('click', this.handleModalClick);
+
+        // Add fresh event listeners
         if (prevBtn) {
-            prevBtn.addEventListener('click', () => this.previousQuestion());
+            prevBtn.addEventListener('click', this.handlePrevClick);
+            console.log('▶️ Previous button handler attached');
         }
 
         if (nextBtn) {
-            nextBtn.addEventListener('click', () => this.nextQuestion());
+            nextBtn.addEventListener('click', this.handleNextClick);
+            console.log('▶️ Next button handler attached');
         }
 
         if (submitBtn) {
-            submitBtn.addEventListener('click', () => this.submitQuiz());
+            submitBtn.addEventListener('click', this.handleSubmitClick);
+            console.log('▶️ Submit button handler attached');
         }
 
-        // Close modal when clicking outside
         if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    this.closeQuiz();
-                }
-            });
+            modal.addEventListener('click', this.handleModalClick);
         }
     }
 
     loadQuestion(questionIndex) {
+        console.log('📝 Loading question:', questionIndex + 1);
+        
         const question = this.currentQuiz.questions[questionIndex];
         const container = document.getElementById('quizQuestionContainer');
         const currentQuestionSpan = document.getElementById('currentQuestion');
@@ -63,10 +81,14 @@ class QuizManager {
         const prevBtn = document.getElementById('prevQuestion');
         const nextBtn = document.getElementById('nextQuestion');
         const submitBtn = document.getElementById('submitQuiz');
+        const progressBar = document.getElementById('quizProgress');
 
-        if (!container || !question) return;
+        if (!container || !question) {
+            console.error('❌ Could not find question container or question data');
+            return;
+        }
 
-        // Update progress
+        // Update question counter
         if (currentQuestionSpan) {
             currentQuestionSpan.textContent = questionIndex + 1;
         }
@@ -74,20 +96,31 @@ class QuizManager {
             totalQuestionsSpan.textContent = this.currentQuiz.questions.length;
         }
 
-        // Update navigation buttons
+        // Update progress bar if it exists
+        if (progressBar) {
+            const progress = ((questionIndex + 1) / this.currentQuiz.questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // Configure navigation buttons
         if (prevBtn) {
             prevBtn.disabled = questionIndex === 0;
+            prevBtn.style.visibility = questionIndex === 0 ? 'hidden' : 'visible';
         }
         
         if (nextBtn && submitBtn) {
-            if (questionIndex === this.currentQuiz.questions.length - 1) {
-                nextBtn.style.display = 'none';
-                submitBtn.style.display = 'flex';
-            } else {
-                nextBtn.style.display = 'flex';
-                submitBtn.style.display = 'none';
-            }
+            const isLastQuestion = questionIndex === this.currentQuiz.questions.length - 1;
+            
+            // Toggle button visibility
+            nextBtn.style.display = isLastQuestion ? 'none' : 'flex';
+            submitBtn.style.display = isLastQuestion ? 'flex' : 'none';
+            
+            // Update button states
+            nextBtn.disabled = false;
+            submitBtn.disabled = false;
         }
+
+        console.log(`▶️ Navigation updated: Q${questionIndex + 1}/${this.currentQuiz.questions.length}`);
 
         // Render question
         container.innerHTML = `
@@ -119,28 +152,142 @@ class QuizManager {
     }
 
     previousQuestion() {
-        if (this.currentQuestionIndex > 0) {
+        try {
+            if (this.currentQuestionIndex <= 0) {
+                console.log('⚠️ Already at first question');
+                return;
+            }
+
+            console.log(`⬅️ Moving from Q${this.currentQuestionIndex + 1} to Q${this.currentQuestionIndex}`);
             this.currentQuestionIndex--;
             this.loadQuestion(this.currentQuestionIndex);
+        } catch (error) {
+            console.error('❌ Error navigating to previous question:', error);
         }
     }
 
     nextQuestion() {
-        if (this.currentQuestionIndex < this.currentQuiz.questions.length - 1) {
+        try {
+            const totalQuestions = this.currentQuiz.questions.length;
+            
+            if (this.currentQuestionIndex >= totalQuestions - 1) {
+                console.log('⚠️ Already at last question');
+                return;
+            }
+
+            console.log(`➡️ Moving from Q${this.currentQuestionIndex + 1} to Q${this.currentQuestionIndex + 2}`);
             this.currentQuestionIndex++;
             this.loadQuestion(this.currentQuestionIndex);
+        } catch (error) {
+            console.error('❌ Error navigating to next question:', error);
         }
     }
 
     async submitQuiz() {
-        if (this.userAnswers.length !== this.currentQuiz.questions.length) {
-            alert('Please answer all questions before submitting.');
-            return;
-        }
+        try {
+            // 1. Check authentication and network status
+            if (!firebase.auth().currentUser) {
+                throw new Error('Authentication required. Please log in to submit your quiz.');
+            }
 
-        this.quizResults = this.calculateResults();
-        await this.saveQuizResults();
-        this.showQuizResults();
+            if (!navigator.onLine) {
+                throw new Error('No internet connection. Please check your connection and try again.');
+            }
+
+            // 2. Validate quiz state
+            if (!this.currentQuiz?.questions) {
+                throw new Error('Quiz data is invalid. Please restart the quiz.');
+            }
+
+            // 3. Show loading state on submit button
+            const submitBtn = document.getElementById('submitQuiz');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            }
+
+            try {
+                // 4. Validate answers
+                const unansweredQuestions = [];
+                for (let i = 0; i < this.currentQuiz.questions.length; i++) {
+                    if (this.userAnswers[i] === undefined) {
+                        unansweredQuestions.push(i + 1);
+                    }
+                }
+
+                if (unansweredQuestions.length > 0) {
+                    const message = unansweredQuestions.length === 1 
+                        ? `Please answer question ${unansweredQuestions[0]} before submitting.`
+                        : `Please answer questions ${unansweredQuestions.join(', ')} before submitting.`;
+                    throw new Error(message);
+                }
+
+                // 5. Calculate and save results
+                console.log('📊 Calculating quiz results...');
+                this.quizResults = this.calculateResults();
+
+                // 6. Save with retry mechanism
+                let saveAttempts = 0;
+                const maxAttempts = 3;
+                let lastError = null;
+
+                while (saveAttempts < maxAttempts) {
+                    try {
+                        await this.saveQuizResults();
+                        console.log('✅ Quiz results saved successfully');
+                        break;
+                    } catch (error) {
+                        saveAttempts++;
+                        lastError = error;
+                        console.error(`Save attempt ${saveAttempts} failed:`, error);
+                        if (saveAttempts === maxAttempts) {
+                            throw new Error('Failed to save quiz results: ' + error.message);
+                        }
+                        // Wait with exponential backoff
+                        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, saveAttempts)));
+                    }
+                }
+
+                // 7. Show results and log completion
+                this.showQuizResults();
+                this.logQuizCompletion().catch(error => {
+                    console.error('Non-critical: Analytics logging failed:', error);
+                });
+
+            } finally {
+                // Always reset submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> Submit Quiz';
+                }
+            }
+
+        } catch (error) {
+            console.error('❌ Error during quiz submission:', error);
+            
+            // Format user-friendly error message
+            let errorMessage = 'There was a problem submitting your quiz. ';
+            if (error.message.includes('Please answer question')) {
+                // For unanswered questions, show the original message
+                errorMessage = error.message;
+                // Navigate to first unanswered question
+                const questionNum = parseInt(error.message.match(/question (\d+)/)?.[1]);
+                if (questionNum) {
+                    this.currentQuestionIndex = questionNum - 1;
+                    this.loadQuestion(this.currentQuestionIndex);
+                }
+            } else if (error.message.includes('logged in') || error.message.includes('Authentication')) {
+                errorMessage += 'Please make sure you are logged in and try again.';
+            } else if (error.message.includes('connection')) {
+                errorMessage += 'Please check your internet connection and try again.';
+            } else if (error.code === 'permission-denied') {
+                errorMessage += 'Access denied. Please log out and log back in.';
+            } else {
+                errorMessage += 'Please try again. If the problem persists, contact support.';
+            }
+            
+            alert(errorMessage);
+        }
     }
 
     calculateResults() {
@@ -172,55 +319,215 @@ class QuizManager {
         };
     }
 
-    // In scripts/quiz-system.js - Update the saveQuizResults method
-async saveQuizResults() {
-    if (!window.firestoreService || !firebase.auth().currentUser) return;
-
-    const uid = firebase.auth().currentUser.uid;
-    const moduleId = window.moduleContentManager.currentModule.id;
-
-    try {
-        // Calculate module progress based on quiz completion
-        const moduleProgress = this.quizResults.passed ? 100 : 50; // 50% if failed but attempted
-        
-        // Save quiz results with updated progress
-        await window.firestoreService.saveModuleProgress(uid, moduleId, {
-            progress: moduleProgress,
-            completed: this.quizResults.passed,
-            score: this.quizResults.score,
-            quizCompleted: true,
-            lastUpdated: new Date()
-        });
-
-        // Award badge if passed
-        if (this.quizResults.passed) {
-            await window.firestoreService.awardBadge(uid, `${moduleId}_expert`, {
-                name: `${window.moduleContentManager.currentModule.title} Expert`,
-                description: `Scored ${this.quizResults.score}% on ${window.moduleContentManager.currentModule.title} quiz`,
-                type: 'module_completion',
-                moduleId: moduleId,
-                score: this.quizResults.score
-            });
+    async saveQuizResults() {
+        // 1. Validate authentication state
+        const auth = firebase.auth();
+        if (!auth.currentUser) {
+            console.error('❌ No user logged in');
+            throw new Error('Authentication required. Please log in to submit your quiz.');
         }
 
-        // Update user streak
-        await window.firestoreService.updateUserStreak(uid);
+        // 2. Verify Firestore service
+        if (!window.firestoreService) {
+            console.error('❌ Firestore service not available');
+            throw new Error('Service unavailable. Please refresh the page and try again.');
+        }
 
-        // Save quiz analytics
-        await window.firestoreService.saveQuizAnalytics(uid, moduleId, {
-            score: this.quizResults.score,
-            correctAnswers: this.quizResults.correctAnswers,
-            totalQuestions: this.quizResults.totalQuestions,
-            passed: this.quizResults.passed,
-            userAnswers: this.userAnswers
+        // 3. Get and validate user ID
+        const uid = auth.currentUser.uid;
+        if (!uid) {
+            console.error('❌ Invalid user ID');
+            throw new Error('Invalid user session. Please log out and log back in.');
+        }
+
+        // 4. Get and validate module ID
+        const moduleId = window.moduleContentManager?.currentModule?.id;
+        if (!moduleId) {
+            console.error('❌ Invalid module ID');
+            throw new Error('Module data is invalid. Please restart the quiz.');
+        }
+
+        // 5. Log attempt details
+        console.log('🔐 Saving quiz with auth:', {
+            uid,
+            moduleId,
+            isAuthenticated: !!auth.currentUser,
+            authTime: auth.currentUser.metadata.lastSignInTime
         });
 
-        console.log(`✅ Module ${moduleId} progress updated to: ${moduleProgress}%`);
+        try {
+            console.log('🎯 Saving quiz results for module:', moduleId);
 
-    } catch (error) {
-        console.error('Error saving quiz results:', error);
+            // 1. Check network connectivity
+            if (!navigator.onLine) {
+                throw new Error('No internet connection. Please check your connection and try again.');
+            }
+
+            // 2. Check Firestore connection
+            try {
+                await firebase.firestore().collection('users').doc(uid).get();
+            } catch (error) {
+                throw new Error('Cannot connect to database. Please check your connection and try again.');
+            }
+
+            // 3. Use a Firestore batch for atomic updates
+            const batch = firebase.firestore().batch();
+
+            // Update module progress
+            const moduleProgress = this.quizResults.passed ? 100 : Math.max(50, await this.getCurrentProgress(uid, moduleId));
+            const moduleRef = firebase.firestore().collection('user_progress').doc(uid)
+                .collection('modules').doc(moduleId);
+            
+            console.log('📊 Updating module progress:', {
+                moduleId,
+                progress: moduleProgress,
+                score: this.quizResults.score,
+                passed: this.quizResults.passed
+            });
+
+            // Module update
+            batch.set(moduleRef, {
+                progress: moduleProgress,
+                completed: this.quizResults.passed,
+                score: this.quizResults.score,
+                quizCompleted: true,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                lastQuizAttempt: {
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    score: this.quizResults.score,
+                    passed: this.quizResults.passed
+                }
+            }, { merge: true });
+
+            // Save detailed quiz results
+            const quizResultsRef = moduleRef.collection('quizResults').doc();
+            batch.set(quizResultsRef, {
+                score: this.quizResults.score,
+                correctAnswers: this.quizResults.correctAnswers,
+                totalQuestions: this.quizResults.totalQuestions,
+                passed: this.quizResults.passed,
+                userAnswers: this.userAnswers,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                moduleId, // Add moduleId for easier querying
+                userId: uid // Add userId for security rules
+            });
+
+            // Update user profile
+            const userRef = firebase.firestore().collection('users').doc(uid);
+            batch.set(userRef, {
+                lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+                lastModuleId: moduleId,
+                [`moduleScores.${moduleId}`]: this.quizResults.score,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            // Verify write permissions before committing
+            try {
+                // Test write permission with a small transaction
+                const testRef = firebase.firestore().collection('users').doc(uid);
+                await firebase.firestore().runTransaction(async (transaction) => {
+                    const doc = await transaction.get(testRef);
+                    if (!doc.exists) {
+                        // Create user document if it doesn't exist
+                        transaction.set(testRef, {
+                            lastActive: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                    return true;
+                });
+
+                // If permission test passes, execute the main updates
+                await batch.commit();
+                console.log('✅ Quiz results saved successfully');
+
+                // Handle post-save actions
+                if (this.quizResults.passed) {
+                    try {
+                        const badgeData = {
+                            name: `${window.moduleContentManager.currentModule.title} Expert`,
+                            description: `Scored ${this.quizResults.score}% on ${window.moduleContentManager.currentModule.title} quiz`,
+                            type: 'module_completion',
+                            moduleId: moduleId,
+                            score: this.quizResults.score,
+                            awardedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            userId: uid // Add user ID for security rules
+                        };
+
+                        await window.firestoreService.awardBadge(uid, `${moduleId}_expert`, badgeData);
+                        console.log('🏆 Badge awarded successfully');
+                    } catch (error) {
+                        console.error('⚠️ Badge award failed but quiz results were saved:', error);
+                        // Don't throw error as quiz results are saved
+                    }
+                }
+
+                // Update streak and refresh UI
+                try {
+                    await window.firestoreService.updateUserStreak(uid);
+                    if (window.dashboardManager) {
+                        window.dashboardManager.refreshDashboard();
+                    }
+                } catch (error) {
+                    console.error('⚠️ Non-critical update failed:', error);
+                    // Don't throw as these are non-critical updates
+                }
+            } catch (error) {
+                throw error; // Re-throw the error for the outer try-catch to handle
+            }
+
+        } catch (error) {
+            console.error('❌ Error saving quiz results:', error);
+            
+            // Show user-friendly error message based on error type
+            if (error.code === 'permission-denied') {
+                throw new Error('Access denied. Please check if you are properly logged in.');
+            } else if (error.code === 'unavailable') {
+                throw new Error('Service temporarily unavailable. Please try again in a few minutes.');
+            } else {
+                throw new Error(`Failed to save quiz results: ${error.message || 'Unknown error occurred'}`);
+            }
+        }
     }
-}
+
+    async getCurrentProgress(uid, moduleId) {
+        try {
+            // 1. Validate parameters
+            if (!uid || !moduleId) {
+                console.error('❌ Invalid parameters for getCurrentProgress:', { uid, moduleId });
+                return 0;
+            }
+
+            // 2. Check authentication state
+            const auth = firebase.auth();
+            if (!auth.currentUser || auth.currentUser.uid !== uid) {
+                console.error('❌ User authentication mismatch');
+                throw new Error('Authentication required');
+            }
+
+            // 3. Get progress from the correct path matching security rules
+            const db = firebase.firestore();
+            const moduleDoc = await db.collection('user_progress').doc(uid)
+                .collection('modules').doc(moduleId)
+                .get();
+
+            // 4. Log progress retrieval
+            console.log('📊 Retrieved module progress:', {
+                moduleId,
+                exists: moduleDoc.exists,
+                progress: moduleDoc.exists ? moduleDoc.data()?.progress : 0
+            });
+
+            return moduleDoc.exists ? (moduleDoc.data()?.progress || 0) : 0;
+
+        } catch (error) {
+            console.error('❌ Error getting current progress:', error);
+            if (error.code === 'permission-denied') {
+                throw new Error('Access denied. Please check your login status.');
+            }
+            // Return 0 for other errors to allow quiz submission
+            return 0;
+        }
+    }
 
 
     showQuizResults() {
@@ -317,25 +624,28 @@ async saveQuizResults() {
             window.firestoreService.updateOverallProgress(firebase.auth().currentUser.uid);
         }
     }
-    
-    // In scripts/quiz-system.js - Add this after saving quiz results
-async submitQuiz() {
-    if (this.userAnswers.length !== this.currentQuiz.questions.length) {
-        alert('Please answer all questions before submitting.');
-        return;
-    }
+    async logQuizCompletion() {
+        if (!firebase.auth().currentUser) return;
 
-    this.quizResults = this.calculateResults();
-    await this.saveQuizResults();
-    this.showQuizResults();
-    
-    // Refresh dashboard data after quiz completion
-    if (window.dashboardManager) {
-        setTimeout(() => {
-            window.dashboardManager.refreshDashboard();
-        }, 1000);
+        try {
+            const analyticsData = {
+                moduleId: window.moduleContentManager.currentModule.id,
+                score: this.quizResults.score,
+                passed: this.quizResults.passed,
+                totalQuestions: this.quizResults.totalQuestions,
+                correctAnswers: this.quizResults.correctAnswers,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // Log to analytics collection
+            await firebase.firestore().collection('analytics').doc('quizzes').collection('attempts')
+                .add(analyticsData);
+
+        } catch (error) {
+            console.error('Error logging quiz analytics:', error);
+            // Non-critical error, don't alert user
+        }
     }
-}
 }
 
 // Initialize Quiz Manager

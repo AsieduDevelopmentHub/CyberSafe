@@ -151,16 +151,45 @@ class FirestoreService {
     // Badge Management
     async awardBadge(uid, badgeId, badgeData) {
         try {
+            // Verify user exists first
+            const userRef = this.db.collection('users').doc(uid);
+            const userDoc = await userRef.get();
+            
+            if (!userDoc.exists) {
+                throw new Error('User document does not exist');
+            }
+
             const badgeRef = this.db.collection('user_badges').doc(uid).collection('badges').doc(badgeId);
             
+            // Add additional security fields
             const badge = {
                 id: badgeId,
                 userId: uid,
                 awardedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                ...badgeData
+                verified: true, // Add verification flag
+                ...badgeData,
+                metadata: {
+                    ...badgeData.metadata,
+                    userEmail: userDoc.data().email,
+                    createdBy: 'system',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }
             };
 
-            await badgeRef.set(badge);
+            // Use transaction to ensure atomic write
+            await this.db.runTransaction(async (transaction) => {
+                const existingBadge = await transaction.get(badgeRef);
+                if (!existingBadge.exists) {
+                    transaction.set(badgeRef, badge);
+                } else {
+                    // Update existing badge if needed
+                    transaction.update(badgeRef, {
+                        ...badge,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            });
+
             console.log('✅ Badge awarded:', badge);
             return badge;
         } catch (error) {
@@ -268,24 +297,24 @@ class FirestoreService {
     }
 
     // Quiz Analytics
-    async saveQuizAnalytics(uid, moduleId, quizData) {
-        try {
-            const analyticsRef = this.db.collection('quiz_analytics').doc();
+    // async saveQuizAnalytics(uid, moduleId, quizData) {
+    //     try {
+    //         const analyticsRef = this.db.collection('quiz_analytics').doc();
             
-            await analyticsRef.set({
-                userId: uid,
-                moduleId,
-                ...quizData,
-                completedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+    //         await analyticsRef.set({
+    //             userId: uid,
+    //             moduleId,
+    //             ...quizData,
+    //             completedAt: firebase.firestore.FieldValue.serverTimestamp()
+    //         });
 
-            console.log('✅ Quiz analytics saved for module:', moduleId);
-            return true;
-        } catch (error) {
-            console.error('❌ Error saving quiz analytics:', error);
-            return false;
-        }
-    }
+    //         console.log('✅ Quiz analytics saved for module:', moduleId);
+    //         return true;
+    //     } catch (error) {
+    //         console.error('❌ Error saving quiz analytics:', error);
+    //         return false;
+    //     }
+    // }
 
     // Update user email specifically (for email fixes)
     async updateUserEmail(uid, email) {
@@ -304,44 +333,132 @@ class FirestoreService {
     }
     
     // Add this method to your existing firestore-service.js
-async getUserProgressSummary(uid) {
-    try {
-        // Get user profile
-        const userDoc = await this.db.collection('users').doc(uid).get();
-        if (!userDoc.exists) return null;
+    async getUserProgressSummary(uid) {
+        try {
+            // Get user profile
+            const userDoc = await this.db.collection('users').doc(uid).get();
+            if (!userDoc.exists) return null;
 
-        const userData = userDoc.data();
-        
-        // Get all module progress
-        const modulesSnapshot = await this.db.collection('user_progress')
-            .doc(uid)
-            .collection('modules')
-            .get();
-        
-        const modulesProgress = modulesSnapshot.docs.map(doc => doc.data());
-        
-        // Calculate statistics
-        const completedModules = modulesProgress.filter(module => module.completed);
-        const totalScore = completedModules.reduce((sum, module) => sum + (module.score || 0), 0);
-        const averageScore = completedModules.length > 0 ? Math.round(totalScore / completedModules.length) : 0;
-        
-        return {
-            user: userData,
-            modulesProgress: modulesProgress,
-            statistics: {
-                totalModules: modulesProgress.length,
-                completedModules: completedModules.length,
-                completionRate: Math.round((completedModules.length / 6) * 100), // 6 total modules
-                averageScore: averageScore,
-                currentStreak: userData.progress?.currentStreak || 0,
-                totalPoints: userData.progress?.totalPoints || 0
-            }
-        };
-    } catch (error) {
-        console.error('Error getting user progress summary:', error);
-        return null;
+            const userData = userDoc.data();
+            
+            // Get all module progress
+            const modulesSnapshot = await this.db.collection('user_progress')
+                .doc(uid)
+                .collection('modules')
+                .get();
+            
+            const modulesProgress = modulesSnapshot.docs.map(doc => doc.data());
+            
+            // Calculate statistics
+            const completedModules = modulesProgress.filter(module => module.completed);
+            const totalScore = completedModules.reduce((sum, module) => sum + (module.score || 0), 0);
+            const averageScore = completedModules.length > 0 ? Math.round(totalScore / completedModules.length) : 0;
+            
+            return {
+                user: userData,
+                modulesProgress: modulesProgress,
+                statistics: {
+                    totalModules: modulesProgress.length,
+                    completedModules: completedModules.length,
+                    completionRate: Math.round((completedModules.length / 6) * 100), // 6 total modules
+                    averageScore: averageScore,
+                    currentStreak: userData.progress?.currentStreak || 0,
+                    totalPoints: userData.progress?.totalPoints || 0
+                }
+            };
+        } catch (error) {
+            console.error('Error getting user progress summary:', error);
+            return null;
+        }
     }
-}
+
+    async updateModuleWithQuizResults(uid, moduleId, quizData) {
+        try {
+            console.log('🎯 Updating module with quiz results:', { uid, moduleId, quizData });
+            
+            const moduleRef = this.db.collection('user_progress').doc(uid)
+                .collection('modules').doc(moduleId);
+
+            // Calculate if module is completed (score >= passing score)
+            const isCompleted = quizData.score >= quizData.passingScore;
+            const currentTime = firebase.firestore.FieldValue.serverTimestamp();
+
+            const updateData = {
+                moduleId: moduleId,
+                userId: uid,
+                progress: 100, // Module is 100% complete after quiz
+                completed: isCompleted,
+                score: quizData.score,
+                totalQuestions: quizData.totalQuestions,
+                correctAnswers: quizData.correctAnswers,
+                passingScore: quizData.passingScore,
+                quizCompletedAt: currentTime,
+                lastUpdated: currentTime,
+                timeSpent: quizData.timeSpent || 0
+            };
+
+            await moduleRef.set(updateData, { merge: true });
+            console.log('✅ Module quiz results saved:', updateData);
+
+            // Update overall progress
+            await this.updateOverallProgress(uid);
+
+            // Award badge if module completed successfully
+            if (isCompleted) {
+                await this.awardModuleCompletionBadge(uid, moduleId, quizData.score);
+            }
+
+            return updateData;
+        } catch (error) {
+            console.error('❌ Error updating module with quiz results:', error);
+            throw error;
+        }
+    }
+
+    async awardModuleCompletionBadge(uid, moduleId, score) {
+        try {
+            const badgeId = `${moduleId}_completion`;
+            const badgeData = {
+                name: `${this.getModuleName(moduleId)} Master`,
+                description: `Completed ${this.getModuleName(moduleId)} module with ${score}% score`,
+                icon: 'fas fa-trophy',
+                color: this.getModuleColor(moduleId),
+                score: score,
+                moduleId: moduleId,
+                awardedFor: 'module_completion'
+            };
+
+            await this.awardBadge(uid, badgeId, badgeData);
+            console.log('🏆 Module completion badge awarded:', badgeId);
+        } catch (error) {
+            console.error('❌ Error awarding module completion badge:', error);
+        }
+    }
+
+    // Helper methods for module information
+    getModuleName(moduleId) {
+        const moduleNames = {
+            phishing: 'Phishing Awareness',
+            passwords: 'Password Security',
+            social: 'Social Engineering',
+            network: 'Network Security',
+            data: 'Data Protection',
+            mobile: 'Mobile Security'
+        };
+        return moduleNames[moduleId] || moduleId;
+    }
+
+    getModuleColor(moduleId) {
+        const moduleColors = {
+            phishing: '#00B8D9',
+            passwords: '#FF6F00',
+            social: '#10B981',
+            network: '#8B5CF6',
+            data: '#EF4444',
+            mobile: '#F59E0B'
+        };
+        return moduleColors[moduleId] || '#666666';
+    }
 }
 
 // Initialize Firestore Service

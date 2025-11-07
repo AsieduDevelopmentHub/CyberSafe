@@ -193,6 +193,9 @@ class CyberSafeApp {
             // Load initial user data
             await this.loadInitialData(user);
             
+            // Setup real-time listeners
+            this.setupRealTimeListeners(user.uid);
+            
             // Hide loading screen after data is loaded
             setTimeout(() => {
                 this.hideLoadingScreen();
@@ -204,9 +207,143 @@ class CyberSafeApp {
         }
     }
 
+    setupRealTimeListeners(uid) {
+        console.log('🔄 Setting up real-time data listeners...');
+
+        // Listen for user profile changes
+        this.unsubscribeUserProfile = firebase.firestore()
+            .collection('users')
+            .doc(uid)
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (window.dashboardManager) {
+                        window.dashboardManager.updateProgressUI(userData);
+                    }
+                }
+            }, (error) => {
+                console.error('User profile listener error:', error);
+            });
+
+        // Listen for module progress changes
+        this.unsubscribeModuleProgress = firebase.firestore()
+            .collection('user_progress')
+            .doc(uid)
+            .collection('modules')
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach(async (change) => {
+                    if (change.type === 'modified' || change.type === 'added') {
+                        if (window.dashboardManager) {
+                            await window.dashboardManager.refreshDashboard(true);
+                        }
+                        if (window.moduleContentManager) {
+                            window.moduleContentManager.refreshModuleUI(change.doc.id);
+                        }
+                    }
+                });
+            }, (error) => {
+                console.error('Module progress listener error:', error);
+            });
+
+        // Listen for badge updates
+        this.unsubscribeBadges = firebase.firestore()
+            .collection('user_badges')
+            .doc(uid)
+            .collection('badges')
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        this.handleNewBadge(change.doc.data());
+                    }
+                });
+            }, (error) => {
+                console.error('Badge listener error:', error);
+            });
+
+        // Listen for video completions
+        this.unsubscribeVideos = firebase.firestore()
+            .collection('user_progress')
+            .doc(uid)
+            .collection('videos')
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added' || change.type === 'modified') {
+                        if (window.moduleContentManager) {
+                            window.moduleContentManager.updateVideoStatus(change.doc.id, true);
+                        }
+                    }
+                });
+            }, (error) => {
+                console.error('Video completion listener error:', error);
+            });
+    }
+
     handleUserSignedOut() {
+        // Clean up all real-time listeners
+        this.cleanupListeners();
         this.showAuthSection();
         this.hideLoadingScreen();
+    }
+
+    cleanupListeners() {
+        const listeners = [
+            'unsubscribeUserProfile',
+            'unsubscribeModuleProgress',
+            'unsubscribeBadges',
+            'unsubscribeVideos'
+        ];
+
+        listeners.forEach(listener => {
+            if (this[listener]) {
+                this[listener]();
+                this[listener] = null;
+            }
+        });
+        console.log('🧹 Cleaned up all real-time listeners');
+    }
+
+    handleNewBadge(badgeData) {
+        console.log('🏆 New badge earned:', badgeData);
+        
+        // Show badge notification
+        this.showBadgeNotification(badgeData);
+        
+        // Update dashboard
+        if (window.dashboardManager) {
+            window.dashboardManager.refreshDashboard(true);
+        }
+    }
+
+    showBadgeNotification(badgeData) {
+        const notification = document.createElement('div');
+        notification.className = 'badge-notification';
+        notification.innerHTML = `
+            <div class="badge-notification-content">
+                <i class="fas fa-trophy"></i>
+                <div class="badge-info">
+                    <h4>New Badge Earned!</h4>
+                    <p>${badgeData.name}</p>
+                </div>
+                <button class="close-notification">×</button>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Add animation class after a small delay
+        setTimeout(() => notification.classList.add('show'), 100);
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+
+        // Close button handler
+        notification.querySelector('.close-notification').addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        });
     }
 
     async loadInitialData(user) {

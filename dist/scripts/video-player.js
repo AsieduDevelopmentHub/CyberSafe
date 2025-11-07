@@ -4,7 +4,12 @@ class VideoPlayerManager {
         this.players = new Map();
         this.currentVideoId = null;
         this.YouTubeAPIReady = false;
+        this.videoWatchData = new Map();
+        this.watchTimeIntervals = new Map();
+        this.progressListeners = new Set();
+        this.unsubscribeHandlers = new Map();
         this.initYouTubeAPI();
+        this.setupRealTimeListeners();
     }
 
     // Updated YouTube Video Configuration with verified, embed-friendly videos
@@ -430,14 +435,70 @@ videoConfigs = {
         
         console.log('🎬 Player state changed:', states[event.data], 'for video:', videoId);
         
-        if (event.data === YT.PlayerState.ENDED) {
-            console.log('✅ Video ended, tracking completion:', videoId);
-            this.trackVideoCompletion(videoId);
-            
-            // Auto-show completion option
-            this.showCompletionOption();
-        } else if (event.data === YT.PlayerState.PLAYING) {
-            this.trackVideoStart(videoId);
+        const player = event.target;
+        
+        switch (event.data) {
+            case YT.PlayerState.ENDED:
+                // Only track completion if the video was watched properly
+                const watchTime = this.videoWatchData.get(videoId)?.watchTime || 0;
+                const videoDuration = player.getDuration();
+                const watchPercentage = (watchTime / videoDuration) * 100;
+                
+                console.log(`📊 Watch stats - Time: ${watchTime}s, Duration: ${videoDuration}s, Percentage: ${watchPercentage}%`);
+                
+                if (watchPercentage >= 85) {  // Require 85% watch time
+                    console.log('✅ Video ended with sufficient watch time:', videoId);
+                    this.trackVideoCompletion(videoId);
+                    this.showCompletionOption();
+                } else {
+                    console.log('⚠️ Video ended but insufficient watch time:', watchPercentage + '%');
+                    this.showInsufficientWatchTimeMessage();
+                }
+                this.clearVideoWatchData(videoId);
+                break;
+
+            case YT.PlayerState.PLAYING:
+                // Start tracking watch time and playback rate
+                if (!this.videoWatchData.has(videoId)) {
+                    this.videoWatchData.set(videoId, {
+                        watchTime: 0,
+                        lastUpdateTime: Date.now(),
+                        buffering: false,
+                        playbackRate: player.getPlaybackRate()
+                    });
+                    this.startWatchTimeTracking(videoId, player);
+                }
+                this.trackVideoStart(videoId);
+                break;
+
+            case YT.PlayerState.PAUSED:
+                // Update watch time when paused
+                this.updateWatchTime(videoId);
+                break;
+
+            case YT.PlayerState.BUFFERING:
+                // Mark as buffering to not count this time
+                if (this.videoWatchData.has(videoId)) {
+                    const data = this.videoWatchData.get(videoId);
+                    data.buffering = true;
+                    this.videoWatchData.set(videoId, data);
+                }
+                break;
+        }
+        
+        // Monitor playback rate changes
+        const currentRate = player.getPlaybackRate();
+        if (this.videoWatchData.has(videoId)) {
+            const data = this.videoWatchData.get(videoId);
+            if (currentRate !== data.playbackRate) {
+                console.log(`⚠️ Playback rate changed: ${data.playbackRate} -> ${currentRate}`);
+                if (currentRate > 1) {
+                    player.setPlaybackRate(1);
+                    this.showPlaybackRateWarning();
+                }
+                data.playbackRate = currentRate;
+                this.videoWatchData.set(videoId, data);
+            }
         }
     }
 
@@ -789,32 +850,82 @@ videoConfigs = {
         
         if (window.firestoreService && firebase.auth().currentUser) {
             const uid = firebase.auth().currentUser.uid;
+            const batch = firebase.firestore().batch();
             
             try {
-                // Get current module progress
                 const currentModule = window.moduleContentManager?.currentModule;
                 if (currentModule) {
-                    // Add video to completed videos
-                    await window.firestoreService.trackVideoCompletion(uid, videoId);
+                    console.log('🎯 Tracking completion for module:', currentModule.id);
                     
-                    // Recalculate module progress
-                    const moduleProgress = await this.calculateModuleProgress(uid, currentModule.id);
+                    // Track video completion in a batch
+                    const videoRef = firebase.firestore()
+                        .collection('user_progress')
+                        .doc(uid)
+                        .collection('videos')
+                        .doc(videoId);
                     
-                    // Update module progress
-                    await window.firestoreService.saveModuleProgress(uid, currentModule.id, {
-                        progress: moduleProgress,
-                        lastUpdated: new Date(),
-                        videosCompleted: firebase.firestore.FieldValue.arrayUnion(videoId)
+                    batch.set(videoRef, {
+                        videoId,
+                        moduleId: currentModule.id,
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        watchTime: this.videoWatchData.get(videoId)?.watchTime || 0
                     });
                     
+                    // Calculate and update module progress
+                    const moduleProgress = await this.calculateModuleProgress(uid, currentModule.id);
+                    console.log('📊 Calculated module progress:', moduleProgress);
+                    
+                    const progressRef = firebase.firestore()
+                        .collection('user_progress')
+                        .doc(uid)
+                        .collection('modules')
+                        .doc(currentModule.id);
+                    
+                    batch.set(progressRef, {
+                        progress: moduleProgress,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                        videosCompleted: firebase.firestore.FieldValue.arrayUnion(videoId),
+                        videosWatched: true,
+                        moduleId: currentModule.id,
+                        userId: uid
+                    }, { merge: true });
+                    
+                    // Commit the batch
+                    await batch.commit();
                     console.log(`✅ Module ${currentModule.id} progress updated to: ${moduleProgress}%`);
                     
-                    // Check if quiz should be unlocked
+                    // Update dashboard in real-time
+                    if (window.dashboardManager) {
+                        window.dashboardManager.refreshDashboard(true); // Force refresh
+                    }
+                    
+                    // Update module content UI
+                    if (window.moduleContentManager) {
+                        window.moduleContentManager.updateProgressUI(moduleProgress);
+                    }
+                    
+                    // Check quiz unlock status
                     this.checkQuizUnlockStatus(currentModule.id, moduleProgress);
+                    
+                    // Trigger real-time progress update event
+                    this.triggerProgressUpdate(currentModule.id, moduleProgress);
                 }
             } catch (error) {
                 console.error('❌ Error updating module progress after video:', error);
+                // Still update local progress as fallback
+                this.updateLocalProgress(currentModule?.id, uid, true);
             }
+        }
+    }
+
+    // Helper method for local progress
+    updateLocalProgress(moduleId, userId, completed) {
+        try {
+            const localKey = `module_${moduleId}_completed_${userId}`;
+            localStorage.setItem(localKey, completed.toString());
+            console.log('💾 Local progress updated:', localKey, completed);
+        } catch (error) {
+            console.error('Error updating local progress:', error);
         }
     }
 
@@ -873,18 +984,130 @@ videoConfigs = {
         }
     }
 
+    startWatchTimeTracking(videoId, player) {
+        // Clear any existing interval
+        if (this.watchTimeIntervals.has(videoId)) {
+            clearInterval(this.watchTimeIntervals.get(videoId));
+        }
+
+        // Create new interval to update watch time every second
+        const interval = setInterval(() => {
+            this.updateWatchTime(videoId);
+            
+            // Check for potential cheating behaviors
+            if (player) {
+                const currentTime = player.getCurrentTime();
+                const duration = player.getDuration();
+                const data = this.videoWatchData.get(videoId);
+                
+                if (data) {
+                    // Check for sudden time jumps
+                    if (Math.abs(currentTime - data.lastPosition) > 5) {
+                        console.log('⚠️ Detected time jump in video');
+                        this.handlePotentialCheating(videoId, 'time_jump');
+                    }
+                    
+                    // Update last position
+                    data.lastPosition = currentTime;
+                    this.videoWatchData.set(videoId, data);
+                }
+            }
+        }, 1000);
+        
+        this.watchTimeIntervals.set(videoId, interval);
+    }
+
+    updateWatchTime(videoId) {
+        if (!this.videoWatchData.has(videoId)) return;
+        
+        const data = this.videoWatchData.get(videoId);
+        const now = Date.now();
+        
+        // Only update watch time if not buffering
+        if (!data.buffering) {
+            const timeDiff = (now - data.lastUpdateTime) / 1000; // Convert to seconds
+            data.watchTime += timeDiff;
+        }
+        
+        data.lastUpdateTime = now;
+        data.buffering = false; // Reset buffering state
+        this.videoWatchData.set(videoId, data);
+    }
+
+    clearVideoWatchData(videoId) {
+        this.videoWatchData.delete(videoId);
+        if (this.watchTimeIntervals.has(videoId)) {
+            clearInterval(this.watchTimeIntervals.get(videoId));
+            this.watchTimeIntervals.delete(videoId);
+        }
+    }
+
+    handlePotentialCheating(videoId, type) {
+        console.log(`🚫 Potential cheating detected: ${type}`);
+        const data = this.videoWatchData.get(videoId);
+        
+        if (data) {
+            data.cheatingAttempts = (data.cheatingAttempts || 0) + 1;
+            if (data.cheatingAttempts >= 3) {
+                this.penalizeProgress(videoId);
+            }
+            this.videoWatchData.set(videoId, data);
+        }
+    }
+
+    penalizeProgress(videoId) {
+        console.log('🚫 Applying progress penalty for cheating attempts');
+        // Reset watch time progress
+        const data = this.videoWatchData.get(videoId);
+        if (data) {
+            data.watchTime = 0;
+            this.videoWatchData.set(videoId, data);
+        }
+        this.showCheatPenaltyMessage();
+    }
+
+    showPlaybackRateWarning() {
+        this.showToast('Please watch the video at normal speed for proper learning.', 'warning');
+    }
+
+    showInsufficientWatchTimeMessage() {
+        this.showToast('Please watch the complete video to receive credit.', 'warning');
+    }
+
+    showCheatPenaltyMessage() {
+        this.showToast('Irregular viewing detected. Progress has been reset.', 'error');
+    }
+
     async calculateModuleProgress(uid, moduleId) {
         try {
             // Get current module progress
             const currentProgress = await window.firestoreService.getModuleProgress(uid, moduleId);
             let currentProgressValue = currentProgress ? currentProgress.progress : 0;
             
-            // Add video completion progress (each video adds progress based on total videos)
-            const totalVideos = this.videoConfigs[moduleId]?.length || 1;
-            const videoProgressIncrement = Math.min(30, Math.floor(100 / totalVideos));
-            const newProgress = Math.min(100, currentProgressValue + videoProgressIncrement);
+            console.log('📈 Current progress before calculation:', currentProgressValue);
             
-            console.log(`📊 Module progress: ${currentProgressValue}% → ${newProgress}%`);
+            // Get module videos
+            const moduleVideos = this.videoConfigs[moduleId] || [];
+            const totalVideos = moduleVideos.length;
+            
+            if (totalVideos === 0) {
+                console.log('⚠️ No videos found for module:', moduleId);
+                return currentProgressValue;
+            }
+            
+            // Calculate progress based on video completion (20% per video)
+            const completedVideos = currentProgress?.videosCompleted?.length || 0;
+            const videoProgress = Math.min(60, completedVideos * 20); // Cap video progress at 60%
+            
+            // Quiz progress (40% of total)
+            const quizScore = currentProgress?.score || 0;
+            const quizProgress = (quizScore / 100) * 40; // 40% weight for quiz
+            
+            // Calculate total progress
+            const newProgress = Math.min(100, videoProgress + quizProgress);
+            
+            console.log(`📊 Progress calculation: Videos(${videoProgress}%) + Quiz(${quizProgress}%) = ${newProgress}%`);
+            
             return newProgress;
             
         } catch (error) {
@@ -966,6 +1189,125 @@ videoConfigs = {
             }
         });
         this.players.clear();
+        this.cleanupRealTimeListeners();
+    }
+
+    setupRealTimeListeners() {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                this.setupProgressListener(user.uid);
+            } else {
+                this.cleanupRealTimeListeners();
+            }
+        });
+    }
+
+    setupProgressListener(uid) {
+        if (!uid) return;
+
+        // Clean up existing listeners
+        this.cleanupRealTimeListeners();
+
+        try {
+            // Listen for module progress changes
+            const moduleProgressListener = firebase.firestore()
+                .collection('user_progress')
+                .doc(uid)
+                .collection('modules')
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'modified' || change.type === 'added') {
+                            const moduleId = change.doc.id;
+                            const data = change.doc.data();
+                            this.handleProgressUpdate(moduleId, data);
+                        }
+                    });
+                }, (error) => {
+                    console.error('Error in module progress listener:', error);
+                });
+
+            // Listen for video completion changes
+            const videoCompletionListener = firebase.firestore()
+                .collection('user_progress')
+                .doc(uid)
+                .collection('videos')
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            const data = change.doc.data();
+                            this.handleVideoCompletion(data);
+                        }
+                    });
+                }, (error) => {
+                    console.error('Error in video completion listener:', error);
+                });
+
+            // Store unsubscribe functions
+            this.unsubscribeHandlers.set('moduleProgress', moduleProgressListener);
+            this.unsubscribeHandlers.set('videoCompletion', videoCompletionListener);
+        } catch (error) {
+            console.error('Error setting up real-time listeners:', error);
+        }
+    }
+
+    handleProgressUpdate(moduleId, data) {
+        console.log(`📊 Real-time progress update for module ${moduleId}:`, data);
+        
+        // Update module content UI if it's the current module
+        if (window.moduleContentManager?.currentModule?.id === moduleId) {
+            window.moduleContentManager.updateProgressUI(data.progress);
+        }
+
+        // Update dashboard
+        if (window.dashboardManager) {
+            window.dashboardManager.refreshDashboard();
+        }
+
+        // Notify any registered progress listeners
+        this.progressListeners.forEach(listener => {
+            try {
+                listener(moduleId, data);
+            } catch (error) {
+                console.error('Error in progress listener:', error);
+            }
+        });
+    }
+
+    handleVideoCompletion(data) {
+        console.log('📹 Real-time video completion update:', data);
+        
+        // Update UI elements that show video completion status
+        if (window.moduleContentManager) {
+            window.moduleContentManager.updateVideoStatus(data.videoId, true);
+        }
+    }
+
+    cleanupRealTimeListeners() {
+        this.unsubscribeHandlers.forEach((unsubscribe) => {
+            try {
+                unsubscribe();
+            } catch (error) {
+                console.warn('Error unsubscribing listener:', error);
+            }
+        });
+        this.unsubscribeHandlers.clear();
+    }
+
+    triggerProgressUpdate(moduleId, progress) {
+        const event = new CustomEvent('moduleProgressUpdate', {
+            detail: { moduleId, progress }
+        });
+        window.dispatchEvent(event);
+    }
+
+    // Register a progress listener
+    addProgressListener(callback) {
+        this.progressListeners.add(callback);
+    }
+
+    // Remove a progress listener
+    removeProgressListener(callback) {
+        this.progressListeners.delete(callback);
     }
 
     // Test video embedding (for debugging)
