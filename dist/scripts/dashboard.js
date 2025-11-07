@@ -8,8 +8,19 @@ class DashboardManager {
     async init() {
         this.setupNavigation();
         this.setupThemeToggle(); // Setup theme FIRST
-        await this.loadUserProgress();
         this.setupEventListeners();
+        
+        // Set up Firebase Auth state listener
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log('👤 User authenticated, loading data...');
+                await this.loadUserProgress();
+                await this.loadProfileData();
+                if (window.profileManager) {
+                    await window.profileManager.loadUserProfile();
+                }
+            }
+        });
         
         // Wait for navigation manager to be ready
         setTimeout(() => {
@@ -17,11 +28,6 @@ class DashboardManager {
                 console.log('✅ Navigation manager integrated');
             }
         }, 100);
-        
-        const user = firebase.auth().currentUser;
-        if (user) {
-            await this.loadProfileData();
-        }
     }
 
     setupEventListeners() {
@@ -60,7 +66,7 @@ class DashboardManager {
         }
     }
 
-    switchSection(sectionName) {
+    async switchSection(sectionName) {
         console.log('🔄 Dashboard switching to section:', sectionName);
         
         this.currentSection = sectionName;
@@ -71,7 +77,12 @@ class DashboardManager {
         const targetSection = document.getElementById(sectionName);
         if (targetSection) {
             targetSection.classList.add('active');
-            this.loadSectionContent(sectionName);
+            await this.loadSectionContent(sectionName);
+            
+            // Force reload profile data when switching to profile section
+            if (sectionName === 'profile' && window.profileManager) {
+                await window.profileManager.loadUserProfile();
+            }
         }
     }
 
@@ -86,7 +97,7 @@ class DashboardManager {
                 break;
             case 'caseStudies':
                 if (window.modulesManager) {
-                    window.modulesManager.loadCaseStudies();
+                    window.caseStudyManager.loadCaseStudies();
                 }
                 break;
             case 'profile':
@@ -399,16 +410,33 @@ class DashboardManager {
         console.log('✅ Icon updated:', icon.className);
     }
 
-    loadProfileData() {
+    async loadProfileData() {
         console.log('🛡️ Loading profile data...');
         
-        if (window.modulesManager) {
-            window.modulesManager.loadBadges();
-        }
-        
         const user = firebase.auth().currentUser;
-        if (user && window.firestoreService) {
-            this.loadUserProgress();
+        if (!user) {
+            console.log('❌ No user logged in');
+            return;
+        }
+
+        try {
+            // Load badges if modules manager is available
+            if (window.modulesManager) {
+                await window.modulesManager.loadBadges();
+            }
+
+            // Load profile data if profile manager is available
+            if (window.profileManager) {
+                await window.profileManager.loadUserProfile();
+            }
+
+            // Update dashboard data
+            if (window.firestoreService) {
+                await this.loadUserProgress();
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading profile data:', error);
         }
     }
 

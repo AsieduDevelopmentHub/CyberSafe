@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/auth.css">
     <link rel="stylesheet" href="styles/dashboard.css">
+    <link rel="stylesheet" href="styles/profile.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="shortcut icon" href="assets/icons/logo.svg" type="image/x-icon">
@@ -288,6 +289,10 @@
                     <div class="profile-info">
                         <h2 id="profileName">User Name</h2>
                         <p id="profileEmail">user@example.com</p>
+                        <div class="profile-level">
+                            <span class="level-badge">Level 1</span>
+                            <span class="level-title">Cyber Rookie</span>
+                        </div>
                     </div>
                 </div>
 
@@ -306,6 +311,23 @@
                     </div>
                 </div>
 
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list" id="activityList">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Certifications -->
+                <div class="certifications">
+                    <h3>Certifications</h3>
+                    <div class="certifications-grid" id="certificationsGrid">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Badges -->
                 <div class="profile-badges">
                     <h3>Your Badges</h3>
                     <div class="badges-grid" id="badgesGrid">
@@ -313,14 +335,26 @@
                     </div>
                 </div>
 
+                <!-- Quiz History -->
+                <div class="quiz-history">
+                    <h3>Quiz Performance</h3>
+                    <div class="quiz-stats-grid" id="quizStatsGrid">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
                 <div class="profile-actions">
+                    <button class="btn-secondary">
+                        <i class="fas fa-download"></i>
+                        <span>Download Progress Report</span>
+                    </button>
+                    <button class="btn-secondary">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Share Profile</span>
+                    </button>
                     <button class="btn-secondary">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
-                    </button>
-                    <button class="btn-secondary">
-                        <i class="fas fa-question-circle"></i>
-                        <span>Help & Support</span>
                     </button>
                     <button id="logoutBtn" class="btn-logout">
                         <i class="fas fa-sign-out-alt"></i>
@@ -490,8 +524,10 @@
     <script src="scripts/quiz-system.js"></script>
     <script src="scripts/video-player.js"></script>
     <script src="scripts/module-content.js"></script>
+    <script src="scripts/casestudy.js"></script>
     <script src="scripts/navigation-manager.js"></script>
     <script src="scripts/app-enhancements.js"></script>
+    <script src="scripts/profile-manager.js"></script>
     <script src="scripts/app.js"></script>
     
       <!-- Register service worker -->

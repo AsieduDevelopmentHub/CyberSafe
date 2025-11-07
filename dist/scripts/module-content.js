@@ -1685,6 +1685,119 @@ class ModuleContentManager {
     moduleExists(moduleId) {
         return this.modulesContent.hasOwnProperty(moduleId);
     }
+
+    // Update video completion status
+    updateVideoStatus(videoId, isCompleted) {
+        console.log('📼 Updating video status:', videoId, isCompleted);
+        const videoElement = document.querySelector(`[data-video-id="${videoId}"]`);
+        if (videoElement) {
+            if (isCompleted) {
+                videoElement.classList.add('completed');
+                const checkIcon = videoElement.querySelector('.video-completion');
+                if (checkIcon) checkIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            }
+        }
+    }
+
+    // Update progress UI with latest module data
+    async updateProgressUI(moduleData) {
+        console.log('📊 Updating progress UI for module:', moduleData);
+        
+        if (!moduleData || !moduleData.moduleId) return;
+
+        try {
+            // Update module card progress bars
+            const progressBars = document.querySelectorAll(`[data-module="${moduleData.moduleId}"] .progress-fill`);
+            const progressTexts = document.querySelectorAll(`[data-module="${moduleData.moduleId}"] .progress-text`);
+            
+            progressBars.forEach(bar => {
+                bar.style.width = `${moduleData.progress || 0}%`;
+            });
+
+            progressTexts.forEach(text => {
+                text.textContent = `${Math.round(moduleData.progress || 0)}% complete`;
+            });
+
+            // Update video completion status
+            if (moduleData.videosCompleted && Array.isArray(moduleData.videosCompleted)) {
+                moduleData.videosCompleted.forEach(videoId => {
+                    this.updateVideoStatus(videoId, true);
+                });
+            }
+
+            // Update quiz status if score exists
+            if (moduleData.score !== undefined && moduleData.score !== null) {
+                const quizTab = document.querySelector(`[data-module="${moduleData.moduleId}"] .quiz-status`);
+                if (quizTab) {
+                    quizTab.innerHTML = `<i class="fas fa-trophy"></i> Score: ${moduleData.score}%`;
+                }
+            }
+
+        } catch (error) {
+            console.error('❌ Error updating progress UI:', error);
+        }
+    }
+
+    // Refresh module UI when progress updates
+    async refreshModuleUI(moduleId) {
+        console.log('🔄 Refreshing UI for module:', moduleId);
+        
+        if (!moduleId || !firebase.auth().currentUser) return;
+
+        try {
+            // Get latest module progress
+            const progress = await window.firestoreService.getModuleProgress(
+                firebase.auth().currentUser.uid,
+                moduleId
+            );
+
+            if (!progress) return;
+
+            // Update progress bars in dashboard and modules list
+            const progressElements = document.querySelectorAll(`[data-module="${moduleId}"] .progress-fill`);
+            const progressTexts = document.querySelectorAll(`[data-module="${moduleId}"] .progress-text`);
+            
+            progressElements.forEach(element => {
+                element.style.width = `${progress.progress || 0}%`;
+            });
+
+            progressTexts.forEach(element => {
+                element.textContent = `${Math.round(progress.progress || 0)}% complete`;
+            });
+
+            // Update video completion status
+            if (progress.videosCompleted) {
+                progress.videosCompleted.forEach(videoId => {
+                    this.updateVideoStatus(videoId, true);
+                });
+            }
+
+            // If module is currently open, update the modal content
+            if (this.currentModule && this.currentModule.id === moduleId) {
+                // Refresh videos tab if it's active
+                const videosTab = document.querySelector('#videosTab.active');
+                if (videosTab) {
+                    this.loadVideosTab();
+                }
+
+                // Update quiz access if needed
+                if (progress.completed) {
+                    const quizTab = document.getElementById('quizTab');
+                    if (quizTab) {
+                        const startQuizBtn = quizTab.querySelector('#startQuizBtn');
+                        if (startQuizBtn) {
+                            startQuizBtn.disabled = false;
+                        }
+                    }
+                }
+            }
+
+            console.log('✅ Module UI refreshed:', moduleId);
+
+        } catch (error) {
+            console.error('❌ Error refreshing module UI:', error);
+        }
+    }
 }
 
 // Initialize Module Content Manager

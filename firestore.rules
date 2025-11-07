@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only read/write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Additional validation for user data
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'createdAt', 'progress']);
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'progress', 'lastLogin', 'lastActive', 'lastModuleId', 'moduleScores', 'updatedAt']);
+    }
+
+    // Progress data - users can only access their own progress
+    match /user_progress/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /modules/{moduleId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        
+        // Allow access to quiz results subcollection
+        match /quizResults/{resultId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+      
+      match /videos/{videoId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Module content - readable by all authenticated users
+    match /modules/{moduleId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Case studies - readable by all authenticated users
+    match /case_studies/{caseId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Case Study Quizzes - users can read/write their own quiz results
+    match /caseStudyQuizzes/{quizId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if false; // Quiz results should not be modified after creation
+      allow delete: if false; // Quiz results cannot be deleted by users
+    }
+
+    // Quiz Results - users can read/write their own quiz results
+    match /quizResults/{quizId} {
+      allow read: if request.auth != null && (
+        resource == null || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if false; // Quiz results should not be modified after creation
+      allow delete: if false; // Quiz results cannot be deleted by users
+    }
+
+    // User Certifications
+    match /userCertifications/{certId} {
+      allow read: if request.auth != null && (
+        resource == null || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Badges and achievements
+    match /user_badges/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /badges/{badgeId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Analytics collection - allow authenticated users to write their own data
+    match /analytics/quizzes/attempts/{attemptId} {
+      allow read: if false;  // Only admin access
+      allow create: if request.auth != null 
+        && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Function to check if user is accessing their own data
+    function isUserOwned(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}

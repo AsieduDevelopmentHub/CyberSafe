@@ -87,6 +87,9 @@ class CyberSafeApp {
             // Initialize YouTube API
             window.videoPlayerManager.initYouTubeAPI();
             
+            // Initialize Case Study Manager
+            window.caseStudyManager = new CaseStudyManager();
+            
             console.log('✅ All managers initialized successfully');
             
         } catch (error) {

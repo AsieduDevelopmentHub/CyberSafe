@@ -305,36 +305,36 @@ setupFeaturedModulesEvents() {
         `;
     }
 
-    loadCaseStudies() {
-        const caseStudiesList = document.getElementById('caseStudiesList');
-        if (!caseStudiesList) return;
+    // loadCaseStudies() {
+    //     const caseStudiesList = document.getElementById('caseStudiesList');
+    //     if (!caseStudiesList) return;
 
-        caseStudiesList.innerHTML = this.caseStudies.map(study => this.createCaseStudyElement(study)).join('');
-    }
+    //     caseStudiesList.innerHTML = this.caseStudies.map(study => this.createCaseStudyElement(study)).join('');
+    // }
 
-    createCaseStudyElement(study) {
-        return `
-            <div class="section-card case-study-card">
-                <div class="case-study-header">
-                    <div class="case-study-icon">
-                        <i class="${study.icon}"></i>
-                    </div>
-                    <div>
-                        <h4>${study.title}</h4>
-                        <p>${study.description}</p>
-                    </div>
-                </div>
-                <div class="case-study-meta">
-                    <span><i class="fas fa-clock"></i> ${study.duration}</span>
-                    <span><i class="fas fa-graduation-cap"></i> ${study.lessons}</span>
-                </div>
-                <button class="btn-primary">
-                    <span>Start Case Study</span>
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-            </div>
-        `;
-    }
+    // createCaseStudyElement(study) {
+    //     return `
+    //         <div class="section-card case-study-card">
+    //             <div class="case-study-header">
+    //                 <div class="case-study-icon">
+    //                     <i class="${study.icon}"></i>
+    //                 </div>
+    //                 <div>
+    //                     <h4>${study.title}</h4>
+    //                     <p>${study.description}</p>
+    //                 </div>
+    //             </div>
+    //             <div class="case-study-meta">
+    //                 <span><i class="fas fa-clock"></i> ${study.duration}</span>
+    //                 <span><i class="fas fa-graduation-cap"></i> ${study.lessons}</span>
+    //             </div>
+    //             <button class="btn-primary">
+    //                 <span>Start Case Study</span>
+    //                 <i class="fas fa-arrow-right"></i>
+    //             </button>
+    //         </div>
+    //     `;
+    // }
 
     loadBadges() {
         const badgesGrid = document.getElementById('badgesGrid');
