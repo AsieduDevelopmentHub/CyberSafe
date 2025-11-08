@@ -1,0 +1,51 @@
+.email-verification-status {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.verification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.verification-badge.verified {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.verification-badge.unverified {
+    background-color: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.verify-email-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.verify-email-btn:hover {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.verify-email-btn i {
+    font-size: 1rem;
+}
+
+/* Hide verify button when email is verified */
+.verification-badge.verified + .verify-email-btn {
+    display: none;
+}

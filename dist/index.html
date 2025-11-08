@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles/auth.css">
     <link rel="stylesheet" href="styles/dashboard.css">
     <link rel="stylesheet" href="styles/profile.css">
+    <link rel="stylesheet" href="styles/email-verification.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="shortcut icon" href="assets/icons/logo.svg" type="image/x-icon">
@@ -71,10 +72,16 @@
                     Don't have an account? <a href="#" id="showSignup">Sign Up</a>
                 </p>
                 <a href="#" class="forgot-password" id="forgotPassword">Forgot Password?</a>
-                <!-- Add after the auth forms -->
-                <div id="emailVerificationBanner" class="verification-banner" style="display: none;">
-                    <p>Please verify your email address to continue</p>
-                    <button id="resendVerification" class="btn-secondary">Resend Verification Email</button>
+                
+
+            </div>
+            <!-- Email Verification Banner -->
+            <div id="emailVerificationBanner" class="verification-banner" style="display: none;">
+                <div class="banner-content">
+                    <span>📧 Please verify your email address to access all features.</span>
+                    <button onclick="authManager.resendVerificationEmail()" class="resend-btn">
+                        Resend Verification Email
+                    </button>
                 </div>
             </div>
 
@@ -294,6 +301,16 @@
                     <div class="profile-info">
                         <h2 id="profileName">User Name</h2>
                         <p id="profileEmail">user@example.com</p>
+                        <div class="email-verification-status">
+                            <span id="emailVerificationStatus" class="verification-badge unverified">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span class="status-text">Email not verified</span>
+                            </span>
+                            <button id="verifyEmailBtn" class="btn-secondary verify-email-btn">
+                                <i class="fas fa-envelope"></i>
+                                Verify Email
+                            </button>
+                        </div>
                         <div class="profile-level">
                             <span class="level-badge">Level 1</span>
                             <span class="level-title">Cyber Rookie</span>

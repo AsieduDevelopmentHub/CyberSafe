@@ -171,7 +171,7 @@ resetForm.addEventListener('submit', async function(e) {
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
-            window.location.href = 'https://cybersafe.auralenx.com/auth.success.html';
+            window.location.href = 'https://cybersafe.auralenx.com/auth/success.html';
         }, 3000);
         
     } catch (error) {

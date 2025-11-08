@@ -20,6 +20,17 @@ class ProfileManager {
         if (shareBtn) {
             shareBtn.addEventListener('click', () => this.shareProfile());
         }
+
+        // FIXED: Use AuthManager's resend verification method
+        const verifyEmailBtn = document.getElementById('verifyEmailBtn');
+        if (verifyEmailBtn) {
+            verifyEmailBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.authManager) {
+                    window.authManager.resendVerificationEmail();
+                }
+            });
+        }
     }
 
     async loadUserProfile() {
@@ -30,6 +41,9 @@ class ProfileManager {
         }
 
         try {
+            // FIXED: Update email verification status using AuthManager's method
+            this.updateEmailVerificationStatus(user);
+
             await Promise.all([
                 this.loadBadges(user.uid),
                 this.loadRecentActivity(user.uid),
@@ -497,6 +511,38 @@ class ProfileManager {
         // Implementation for downloading certificate
         console.log('Downloading certificate:', certId);
         // Add your implementation here
+    }
+
+    // FIXED: Simplified email verification status update
+    updateEmailVerificationStatus(user) {
+        const verificationStatus = document.getElementById('emailVerificationStatus');
+        const verifyEmailBtn = document.getElementById('verifyEmailBtn');
+        
+        if (!verificationStatus || !verifyEmailBtn) return;
+
+        if (user.emailVerified) {
+            verificationStatus.className = 'verification-badge verified';
+            verificationStatus.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span class="status-text">Email verified</span>
+            `;
+            verifyEmailBtn.style.display = 'none';
+        } else {
+            verificationStatus.className = 'verification-badge unverified';
+            verificationStatus.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span class="status-text">Email not verified</span>
+            `;
+            verifyEmailBtn.style.display = 'inline-flex';
+        }
+    }
+
+    showSuccess(message) {
+        alert(message); // You can replace this with a better UI notification
+    }
+
+    showError(message) {
+        alert(message); // You can replace this with a better UI notification
     }
 }
 

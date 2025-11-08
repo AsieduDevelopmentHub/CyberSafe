@@ -10,7 +10,7 @@ const resendBtn = document.getElementById('resendBtn');
 const urlParams = new URLSearchParams(window.location.search);
 const mode = urlParams.get('mode');
 const oobCode = urlParams.get('oobCode');
-const continueUrl = urlParams.get('continueUrl') || 'https://cybersafe.auralenx.com/success.html';
+const continueUrl = urlParams.get('continueUrl') || 'https://cybersafe.auralenx.com/auth/success.html';
 
 // Initialize verification
 document.addEventListener('DOMContentLoaded', function() {
