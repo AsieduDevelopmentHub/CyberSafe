@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com;">
     <title>CyberSafe - Learn Cybersecurity the Smart Way</title>
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/auth.css">
@@ -38,7 +39,7 @@
         <div class="auth-container">
             <div class="auth-header">
                 <div class="logo">
-                    <img src="assets/icons/logo.svg" width="60px"  alt="logo"></img>
+                    <img src="assets/icons/logo.svg" width="60px"  alt="CyberSafe logo">
                     <span>CyberSafe</span>
                 </div>
                 <h2>Learn Cybersecurity<br>The Smart Way</h2>
@@ -129,7 +130,7 @@
         <!-- Mobile Navigation -->
         <nav class="mobile-nav">
             <div class="nav-brand">
-                <img src="assets/icons/logo.svg" width="40px"  alt="logo"></img>
+                <img src="assets/icons/logo.svg" width="40px"  alt="CyberSafe logo">
                 <h2>CyberSafe</h2>
             </div>
             <div class="nav-actions">
@@ -526,18 +527,17 @@
                 }, 500);
             }
             
-            progressFill.style.transform = `translateX(${progress - 100}%)`;
+            progressFill.style.width = `${progress}%`;
         }, 200);
 
         setTimeout(() => {
-            const user = firebase.auth().currentUser;
-            if (!user) {
-                loadingScreen.classList.add('hidden');
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 500);
+            firebase.auth().onAuthStateChanged(user => {
+  loadingScreen.classList.add('hidden');
+  setTimeout(() => {
+    loadingScreen.style.display = 'none';
+  }, 500);
             }
-        }, 3000);
+        }, 200);
     });
     </script>
     <script src="scripts/auth.js"></script>

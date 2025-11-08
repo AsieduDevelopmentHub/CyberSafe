@@ -212,7 +212,7 @@ class DashboardManager {
         try {
             if (!window.firestoreService) return [];
             
-            const modulesSnapshot = await firebase.firestore()
+            const modulesSnapshot = await window.firestoreService
                 .collection('user_progress')
                 .doc(uid)
                 .collection('modules')
@@ -232,7 +232,7 @@ class DashboardManager {
             const modulesProgress = await this.getModulesProgress(uid);
             if (modulesProgress.length === 0) return { averagePercentage: 0, averageScore: 0 };
             
-            const completedModules = modulesProgress.filter(module => module.completed && module.score);
+            const completedModules = modulesProgress.filter(module => module.completed);
             if (completedModules.length === 0) return { averagePercentage: 0, averageScore: 0 };
             
             const totalScore = completedModules.reduce((sum, module) => {
