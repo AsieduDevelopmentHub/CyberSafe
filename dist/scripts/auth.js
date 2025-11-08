@@ -8,37 +8,27 @@ class AuthManager {
 
         this.currentUser = null;
         this.actionCodeSettings = {
-            url: 'https://cybersafe.auralenx.com/auth/verify.html',
+            url: window.location.origin + '/auth/verify.html',
             handleCodeInApp: true
         };
         
-        // Track if listeners are already set up
-        this.listenersInitialized = false;
-        
-        // Track event listeners for cleanup
-        this.eventListeners = new Map();
-        
-        // Track last action timestamps to prevent duplicates
-        this.lastActionTimestamps = {
-            forgotPassword: 0,
-            signup: 0,
-            login: 0,
-            googleSignIn: 0
-        };
+        // Simple Google provider setup
+        this.googleProvider = new firebase.auth.GoogleAuthProvider();
+        this.googleProvider.addScope('email');
+        this.googleProvider.addScope('profile');
         
         this.init();
     }
 
     init() {
-        // Check auth state and handle email verification
+        console.log('🚀 AuthManager initializing...');
+        
+        // Simple auth state listener
         firebase.auth().onAuthStateChanged((user) => {
+            console.log('🔄 Auth state changed:', user ? user.email : 'No user');
+            
             if (user) {
                 this.handleUserLogin(user);
-                
-                // Reload user to get latest email verification status
-                user.reload().then(() => {
-                    this.checkEmailVerification(user);
-                });
             } else {
                 this.handleUserLogout();
             }
@@ -47,113 +37,92 @@ class AuthManager {
         // Handle email verification through URL
         this.handleEmailVerificationFromURL();
 
-        // Form event listeners - only setup once
-        if (!this.listenersInitialized) {
-            this.setupEventListeners();
-            this.listenersInitialized = true;
-        }
+        // Form event listeners
+        this.setupEventListeners();
     }
 
-    // SINGLE EVENT LISTENER SETUP WITH DEBOUNCING
     setupEventListeners() {
         console.log('🔄 Setting up auth event listeners...');
         
-        // Use event delegation to prevent multiple listeners
-        document.addEventListener('click', (e) => {
-            this.handleGlobalClick(e);
-        });
+        // Login form
+        const loginForm = document.getElementById('loginFormElement');
+        const signupForm = document.getElementById('signupFormElement');
+        const forgotPasswordLink = document.getElementById('forgotPassword');
+        const resendVerificationLink = document.getElementById('resendVerification');
+        
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleEmailLogin();
+            });
+        }
 
-        document.addEventListener('submit', (e) => {
-            this.handleGlobalSubmit(e);
-        });
-    }
-
-    handleGlobalClick(e) {
-        const target = e.target;
-        const now = Date.now();
-
-        // Forgot Password
-        if (target.id === 'forgotPassword' || target.closest('#forgotPassword')) {
-            e.preventDefault();
-            if (now - this.lastActionTimestamps.forgotPassword > 5000) {
-                this.lastActionTimestamps.forgotPassword = now;
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
                 this.handleForgotPassword();
-            }
-            return;
+            });
         }
 
-        // Resend Verification
-        if (target.id === 'resendVerification' || target.closest('#resendVerification')) {
-            e.preventDefault();
-            this.resendVerificationEmail();
-            return;
+        if (resendVerificationLink) {
+            resendVerificationLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.resendVerificationEmail();
+            });
         }
 
-        // Google Sign In
-        if (target.id === 'googleSignIn' || target.closest('#googleSignIn')) {
-            if (now - this.lastActionTimestamps.googleSignIn > 2000) {
-                this.lastActionTimestamps.googleSignIn = now;
+        // Signup form
+        if (signupForm) {
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleEmailSignup();
+            });
+        }
+
+        // Google sign in - SIMPLE POPUP APPROACH
+        const googleSignIn = document.getElementById('googleSignIn');
+        const googleSignUp = document.getElementById('googleSignUp');
+        
+        if (googleSignIn) {
+            googleSignIn.addEventListener('click', () => {
                 this.handleGoogleSignIn();
-            }
-            return;
+            });
         }
 
-        // Google Sign Up
-        if (target.id === 'googleSignUp' || target.closest('#googleSignUp')) {
-            if (now - this.lastActionTimestamps.googleSignIn > 2000) {
-                this.lastActionTimestamps.googleSignIn = now;
+        if (googleSignUp) {
+            googleSignUp.addEventListener('click', () => {
                 this.handleGoogleSignIn();
-            }
-            return;
+            });
         }
 
-        // Show Signup Form
-        if (target.id === 'showSignup' || target.closest('#showSignup')) {
-            e.preventDefault();
-            this.showSignupForm();
-            return;
+        // Form switching
+        const showSignup = document.getElementById('showSignup');
+        const showLogin = document.getElementById('showLogin');
+        
+        if (showSignup) {
+            showSignup.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showSignupForm();
+            });
         }
 
-        // Show Login Form
-        if (target.id === 'showLogin' || target.closest('#showLogin')) {
-            e.preventDefault();
-            this.showLoginForm();
-            return;
+        if (showLogin) {
+            showLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showLoginForm();
+            });
         }
 
         // Logout
-        if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {
-            this.handleLogout();
-            return;
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.handleLogout();
+            });
         }
     }
 
-    handleGlobalSubmit(e) {
-        const form = e.target;
-        const now = Date.now();
-
-        // Login Form
-        if (form.id === 'loginFormElement') {
-            e.preventDefault();
-            if (now - this.lastActionTimestamps.login > 2000) {
-                this.lastActionTimestamps.login = now;
-                this.handleEmailLogin();
-            }
-            return;
-        }
-
-        // Signup Form
-        if (form.id === 'signupFormElement') {
-            e.preventDefault();
-            if (now - this.lastActionTimestamps.signup > 2000) {
-                this.lastActionTimestamps.signup = now;
-                this.handleEmailSignup();
-            }
-            return;
-        }
-    }
-
-    // FIXED: Email verification URL handler
+    // Handle email verification from URL
     async handleEmailVerificationFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
@@ -166,32 +135,25 @@ class AuthManager {
                 
                 this.showSuccess('Email verified successfully! You can now log in to your account.');
                 
-                // Refresh profile verification status if user is logged in
-                const user = firebase.auth().currentUser;
-                if (user) {
-                    await user.reload();
-                    await this.refreshProfileVerificationStatus();
-                }
-                
+                // Clear the URL parameters
                 window.history.replaceState({}, document.title, window.location.pathname);
-                
-                setTimeout(() => {
-                    window.location.href = 'https://cybersafe.auralenx.com/#auth';
-                }, 3000);
                 
             } catch (error) {
                 console.error('❌ Email verification failed:', error);
+                this.showError('Email verification failed. The link may have expired or already been used.');
             }
         }
     }
 
-    // FIXED: Email login with single execution
     async handleEmailLogin() {
-        console.log('🔐 Login attempt');
-        
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         
+        if (!email || !password) {
+            this.showError('Please enter both email and password');
+            return;
+        }
+
         // Disable login button temporarily
         const loginButton = document.querySelector('#loginFormElement button[type="submit"]');
         const originalText = loginButton ? loginButton.innerHTML : '';
@@ -205,20 +167,8 @@ class AuthManager {
             const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
             
-            // RELOAD USER to get latest verification status
-            await user.reload();
+            console.log('✅ User logged in:', user.email);
             
-            console.log('🔍 Post-reload verification status:', user.emailVerified);
-            
-            if (!user.emailVerified) {
-                console.log('⚠️ User logged in but email not verified');
-                this.showSuccess('Login successful! Please verify your email to access all features.');
-                this.showEmailVerificationBanner();
-            } else {
-                console.log('✅ User logged in with verified email');
-                this.hideEmailVerificationBanner();
-            }
-
             // Update user profile with last login
             if (window.firestoreService) {
                 await window.firestoreService.updateUserProgress(user.uid, {
@@ -226,9 +176,32 @@ class AuthManager {
                     emailVerified: user.emailVerified
                 });
             }
+
+            // Check email verification status
+            this.updateEmailVerificationStatus(user);
             
         } catch (error) {
-            this.showError('Login failed: ' + error.message);
+            console.error('Login error:', error);
+            let errorMessage = 'Login failed: ';
+            
+            switch (error.code) {
+                case 'auth/invalid-email':
+                    errorMessage += 'Invalid email address';
+                    break;
+                case 'auth/user-disabled':
+                    errorMessage += 'This account has been disabled';
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage += 'No account found with this email';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage += 'Incorrect password';
+                    break;
+                default:
+                    errorMessage += error.message;
+            }
+            
+            this.showError(errorMessage);
         } finally {
             // Re-enable login button
             if (loginButton) {
@@ -240,36 +213,16 @@ class AuthManager {
         }
     }
 
-    // Track signup attempts
-    lastSignupAttempt = 0;
-    signupAttempts = 0;
-    
     async handleEmailSignup() {
-        console.log('📝 Signup attempt');
-        
         const name = document.getElementById('signupName').value;
         const email = document.getElementById('signupEmail').value;
         const password = document.getElementById('signupPassword').value;
         const confirmPassword = document.getElementById('signupConfirmPassword').value;
 
-        // Check if we're within the rate limit
-        const now = Date.now();
-        if (now - this.lastSignupAttempt < 1000) {
-            this.showError('Please wait a moment before trying again');
+        if (!name || !email || !password || !confirmPassword) {
+            this.showError('Please fill in all fields');
             return;
         }
-        
-        if (now - this.lastSignupAttempt > 300000) {
-            this.signupAttempts = 0;
-        }
-        
-        if (this.signupAttempts >= 5) {
-            this.showError('Too many signup attempts. Please try again in 5 minutes');
-            return;
-        }
-
-        this.lastSignupAttempt = now;
-        this.signupAttempts++;
 
         if (password !== confirmPassword) {
             this.showError('Passwords do not match');
@@ -299,7 +252,7 @@ class AuthManager {
                 displayName: name
             });
 
-            // Send verification email with proper settings
+            // Send verification email
             await user.sendEmailVerification(this.actionCodeSettings);
 
             // Create user document in Firestore
@@ -322,7 +275,27 @@ class AuthManager {
             }, 2000);
             
         } catch (error) {
-            this.showError('Signup failed: ' + error.message);
+            console.error('Signup error:', error);
+            let errorMessage = 'Signup failed: ';
+            
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage += 'An account with this email already exists';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage += 'Invalid email address';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage += 'Email/password accounts are not enabled';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage += 'Password is too weak';
+                    break;
+                default:
+                    errorMessage += error.message;
+            }
+            
+            this.showError(errorMessage);
         } finally {
             // Re-enable signup button after delay
             setTimeout(() => {
@@ -334,6 +307,7 @@ class AuthManager {
         }
     }
 
+    // SIMPLE Google Sign In with popup
     async handleGoogleSignIn() {
         console.log('🔐 Google sign-in attempt');
         
@@ -347,26 +321,57 @@ class AuthManager {
                 setTimeout(() => {
                     btn.disabled = false;
                     btn.innerHTML = originalHTML;
-                }, 3000);
+                }, 5000);
             }
         });
 
         try {
-            const result = await firebase.auth().signInWithPopup(googleProvider);
+            // Use simple popup method
+            const result = await firebase.auth().signInWithPopup(this.googleProvider);
             const user = result.user;
             
-            console.log('🔐 Google user data:', {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                emailVerified: user.emailVerified
-            });
+            console.log('✅ Google sign-in successful:', user.email);
 
+            // Handle user profile
+            await this.handleOAuthUserProfile(user);
+            
+            this.showSuccess(`Welcome, ${user.displayName || user.email}!`);
+            
+        } catch (error) {
+            console.error('❌ Google sign in failed:', error);
+            
+            let errorMessage = 'Google sign in failed: ';
+            if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage = 'Sign in was cancelled.';
+            } else if (error.code === 'auth/popup-blocked') {
+                errorMessage = 'Sign in popup was blocked. Please allow popups for this site.';
+            } else {
+                errorMessage += error.message;
+            }
+            
+            this.showError(errorMessage);
+            
+            // Re-enable buttons on error
+            const googleButtons = document.querySelectorAll('#googleSignIn, #googleSignUp');
+            googleButtons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Continue with Google';
+                }
+            });
+        }
+    }
+
+    // Handle OAuth user profile creation/update
+    async handleOAuthUserProfile(user) {
+        try {
+            console.log('👤 Processing OAuth user profile...');
+            
             // Check if user document exists
             if (window.firestoreService) {
                 const userDoc = await window.firestoreService.getUserProfile(user.uid);
                 if (!userDoc) {
+                    console.log('📝 Creating new user profile for Google user');
                     await window.firestoreService.createUserProfile(user, {
                         name: user.displayName,
                         email: user.email,
@@ -376,22 +381,26 @@ class AuthManager {
                         lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } else {
+                    console.log('🔄 Updating existing user profile');
                     await this.updateUserProfileData(user);
                 }
             }
-        } catch (error) {
-            console.error('Google sign in failed:', error);
-            this.showError('Google sign in failed: ' + error.message);
+        } catch (profileError) {
+            console.error('Error handling OAuth user profile:', profileError);
         }
     }
 
-    // FIXED: Forgot password with robust click prevention
     async handleForgotPassword() {
-        console.log('🔑 Forgot password attempt');
-        
         const email = document.getElementById('loginEmail').value;
         if (!email) {
             this.showError('Please enter your email address');
+            return;
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            this.showError('Please enter a valid email address');
             return;
         }
 
@@ -405,6 +414,7 @@ class AuthManager {
         }
 
         try {
+            console.log('📧 Sending password reset email to:', email);
             await firebase.auth().sendPasswordResetEmail(email, this.actionCodeSettings);
             this.showSuccess('Password reset email sent. Please check your inbox.');
 
@@ -417,7 +427,25 @@ class AuthManager {
             }, 30000);
             
         } catch (error) {
-            this.showError('Failed to send password reset email: ' + error.message);
+            console.error('Password reset error:', error);
+            
+            let errorMessage = 'Failed to send password reset email: ';
+            
+            switch (error.code) {
+                case 'auth/invalid-email':
+                    errorMessage += 'Invalid email address';
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage += 'No account found with this email';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage += 'Too many attempts. Please try again later';
+                    break;
+                default:
+                    errorMessage += error.message;
+            }
+            
+            this.showError(errorMessage);
             
             // Re-enable button on error after 5 seconds
             setTimeout(() => {
@@ -434,22 +462,24 @@ class AuthManager {
             await firebase.auth().signOut();
             this.showSuccess('Logged out successfully');
         } catch (error) {
+            console.error('Logout error:', error);
             this.showError('Logout failed: ' + error.message);
         }
     }
 
     handleUserLogin(user) {
-        this.logUserData(user, 'handleUserLogin');
+        console.log('👤 User logged in:', user.email);
         this.currentUser = user;
         this.updateUIForUser(user);
         this.switchToApp();
         this.ensureUserProfile(user);
         
-        // Check verification status but don't block access
-        this.checkEmailVerification(user);
+        // Update verification status
+        this.updateEmailVerificationStatus(user);
     }
 
     handleUserLogout() {
+        console.log('👤 User logged out');
         this.currentUser = null;
         this.switchToAuth();
         this.hideEmailVerificationBanner();
@@ -460,12 +490,14 @@ class AuthManager {
             if (window.firestoreService) {
                 const userDoc = await window.firestoreService.getUserProfile(user.uid);
                 if (!userDoc) {
+                    console.log('📝 Creating user profile for:', user.email);
                     await window.firestoreService.createUserProfile(user, {
                         name: user.displayName,
                         email: user.email,
                         emailVerified: user.emailVerified
                     });
                 } else {
+                    console.log('🔄 Updating user profile for:', user.email);
                     await this.updateUserProfileData(user);
                 }
             }
@@ -525,7 +557,7 @@ class AuthManager {
         }
 
         this.updateUserAvatar(user, userAvatar, profileAvatar);
-        this.updateVerificationStatusUI(user.emailVerified);
+        this.updateEmailVerificationStatus(user);
     }
 
     async fetchUserEmailFromFirestore(uid, profileEmailElement) {
@@ -553,27 +585,58 @@ class AuthManager {
         }
     }
 
-    updateVerificationStatusUI(isVerified) {
-        const verificationBadge = document.getElementById('emailVerificationBadge');
-        if (verificationBadge) {
-            if (isVerified) {
-                verificationBadge.innerHTML = '✅ Email Verified';
-                verificationBadge.style.color = '#38a169';
-            } else {
-                verificationBadge.innerHTML = '⚠️ Email Not Verified';
-                verificationBadge.style.color = '#d69e2e';
-            }
+    updateEmailVerificationStatus(user) {
+        const verificationStatus = document.getElementById('emailVerificationStatus');
+        const verifyEmailBtn = document.getElementById('verifyEmailBtn');
+        
+        if (!verificationStatus || !verifyEmailBtn) return;
+
+        if (user.emailVerified) {
+            verificationStatus.className = 'verification-badge verified';
+            verificationStatus.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span class="status-text">Email verified</span>
+            `;
+            verifyEmailBtn.style.display = 'none';
+            this.hideEmailVerificationBanner();
+        } else {
+            verificationStatus.className = 'verification-badge unverified';
+            verificationStatus.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span class="status-text">Email not verified</span>
+            `;
+            verifyEmailBtn.style.display = 'inline-flex';
+            this.showEmailVerificationBanner();
         }
     }
 
-    logUserData(user, source) {
-        console.log(`🔍 User Data from ${source}:`, {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            emailVerified: user.emailVerified,
-            photoURL: user.photoURL
-        });
+    async resendVerificationEmail() {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            try {
+                await user.sendEmailVerification(this.actionCodeSettings);
+                this.showSuccess(`Verification email sent to ${user.email}. Please check your inbox.`);
+            } catch (error) {
+                console.error('Resend verification error:', error);
+                this.showError('Failed to send verification email: ' + error.message);
+            }
+        } else {
+            this.showError('Please log in to resend verification email.');
+        }
+    }
+
+    showEmailVerificationBanner() {
+        const banner = document.getElementById('emailVerificationBanner');
+        if (banner) {
+            banner.style.display = 'flex';
+        }
+    }
+
+    hideEmailVerificationBanner() {
+        const banner = document.getElementById('emailVerificationBanner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
     }
 
     showLoginForm() {
@@ -597,16 +660,23 @@ class AuthManager {
     }
 
     switchToApp() {
+        console.log('🔄 Switching to app section...');
         const authSection = document.getElementById('authSection');
         const appSection = document.getElementById('appSection');
         
         if (authSection && appSection) {
             authSection.classList.remove('active');
             appSection.classList.add('active');
+            
+            // Update URL to remove #auth hash
+            if (window.location.hash === '#auth') {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
         }
     }
 
     switchToAuth() {
+        console.log('🔄 Switching to auth section...');
         const authSection = document.getElementById('authSection');
         const appSection = document.getElementById('appSection');
         
@@ -619,7 +689,6 @@ class AuthManager {
 
     showError(message) {
         console.error('❌ Error:', message);
-        // Replace with your toast notification system
         if (typeof showNotification === 'function') {
             showNotification(message, 'error');
         } else {
@@ -629,94 +698,27 @@ class AuthManager {
 
     showSuccess(message) {
         console.log('✅ Success:', message);
-        // Replace with your toast notification system
         if (typeof showNotification === 'function') {
             showNotification(message, 'success');
         } else {
             alert(message);
         }
     }
-
-    async resendVerificationEmail() {
-        const user = firebase.auth().currentUser;
-        if (user) {
-            try {
-                await user.sendEmailVerification(this.actionCodeSettings);
-                this.showSuccess(`Verification email sent to ${user.email}. Please check your inbox.`);
-            } catch (error) {
-                this.showError('Failed to send verification email: ' + error.message);
-            }
-        } else {
-            this.showError('Please log in to resend verification email.');
-        }
-    }
-
-    async checkEmailVerification(user) {
-        console.log('🔍 Checking email verification for:', user.email);
-        console.log('📧 Current verification status:', user.emailVerified);
-        
-        if (user && !user.emailVerified) {
-            console.log('⚠️ Email not verified - showing banner');
-            this.showEmailVerificationBanner();
-            this.handleUnverifiedAccess();
-        } else {
-            console.log('✅ Email verified - hiding banner');
-            this.hideEmailVerificationBanner();
-            this.handleVerifiedAccess();
-        }
-    }
-
-    async refreshProfileVerificationStatus() {
-        const user = firebase.auth().currentUser;
-        if (user && window.profileManager) {
-            await user.reload();
-            window.profileManager.updateEmailVerificationStatus(user);
-        }
-    }
-
-    handleUnverifiedAccess() {
-        const restrictedElements = document.querySelectorAll('[data-requires-verification]');
-        restrictedElements.forEach(element => {
-            element.style.opacity = '0.5';
-            element.style.pointerEvents = 'none';
-        });
-    }
-
-    handleVerifiedAccess() {
-        const restrictedElements = document.querySelectorAll('[data-requires-verification]');
-        restrictedElements.forEach(element => {
-            element.style.opacity = '1';
-            element.style.pointerEvents = 'auto';
-        });
-    }
-
-    showEmailVerificationBanner() {
-        const banner = document.getElementById('emailVerificationBanner');
-        if (banner) {
-            banner.style.display = 'flex';
-        }
-    }
-
-    hideEmailVerificationBanner() {
-        const banner = document.getElementById('emailVerificationBanner');
-        if (banner) {
-            banner.style.display = 'none';
-        }
-    }
 }
 
-// SINGLETON PATTERN - Only one instance allowed
+// SINGLETON PATTERN
 let authManagerInstance = null;
 
 function initializeAuthManager() {
     if (!authManagerInstance) {
+        console.log('🚀 Initializing AuthManager...');
         authManagerInstance = new AuthManager();
         window.authManager = authManagerInstance;
     }
     return authManagerInstance;
 }
 
-// Initialize only once when DOM is loaded
+// Initialize when DOM is loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeAuthManager);
 } else {

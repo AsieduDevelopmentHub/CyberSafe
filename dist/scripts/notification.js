@@ -175,22 +175,22 @@ class NotificationPanel {
                 }
 
                 .confirm-btn.confirm {
-                    background: var(--error);
+                    background: linear-gradient(135deg, var(--auth-background) 0%, #1E3A8A 100%);
                     color: white;
                 }
 
                 .confirm-btn.confirm:hover {
-                    background: #DC2626;
+                    background: rgb(0,0,0,0.5);
                     transform: translateY(-1px);
                 }
 
                 .confirm-btn.success {
-                    background: var(--success);
+                    background: linear-gradient(135deg, var(--auth-background) 0%, #1E3A8A 100%);
                     color: white;
                 }
 
                 .confirm-btn.success:hover {
-                    background: #059669;
+                    background: rgb(0,0,0,0.5);
                     transform: translateY(-1px);
                 }
 
