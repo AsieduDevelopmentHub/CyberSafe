@@ -1,11 +1,32 @@
 class AuthManager {
     constructor() {
+        // Prevent multiple instances
+        if (window.authManagerInstance) {
+            return window.authManagerInstance;
+        }
+        window.authManagerInstance = this;
+
         this.currentUser = null;
-        this.init();
         this.actionCodeSettings = {
             url: 'https://cybersafe.auralenx.com/auth/verify.html',
             handleCodeInApp: true
         };
+        
+        // Track if listeners are already set up
+        this.listenersInitialized = false;
+        
+        // Track event listeners for cleanup
+        this.eventListeners = new Map();
+        
+        // Track last action timestamps to prevent duplicates
+        this.lastActionTimestamps = {
+            forgotPassword: 0,
+            signup: 0,
+            login: 0,
+            googleSignIn: 0
+        };
+        
+        this.init();
     }
 
     init() {
@@ -26,11 +47,113 @@ class AuthManager {
         // Handle email verification through URL
         this.handleEmailVerificationFromURL();
 
-        // Form event listeners
-        this.setupEventListeners();
+        // Form event listeners - only setup once
+        if (!this.listenersInitialized) {
+            this.setupEventListeners();
+            this.listenersInitialized = true;
+        }
     }
 
-    // FIXED: Email verification URL handler - works without login
+    // SINGLE EVENT LISTENER SETUP WITH DEBOUNCING
+    setupEventListeners() {
+        console.log('🔄 Setting up auth event listeners...');
+        
+        // Use event delegation to prevent multiple listeners
+        document.addEventListener('click', (e) => {
+            this.handleGlobalClick(e);
+        });
+
+        document.addEventListener('submit', (e) => {
+            this.handleGlobalSubmit(e);
+        });
+    }
+
+    handleGlobalClick(e) {
+        const target = e.target;
+        const now = Date.now();
+
+        // Forgot Password
+        if (target.id === 'forgotPassword' || target.closest('#forgotPassword')) {
+            e.preventDefault();
+            if (now - this.lastActionTimestamps.forgotPassword > 5000) {
+                this.lastActionTimestamps.forgotPassword = now;
+                this.handleForgotPassword();
+            }
+            return;
+        }
+
+        // Resend Verification
+        if (target.id === 'resendVerification' || target.closest('#resendVerification')) {
+            e.preventDefault();
+            this.resendVerificationEmail();
+            return;
+        }
+
+        // Google Sign In
+        if (target.id === 'googleSignIn' || target.closest('#googleSignIn')) {
+            if (now - this.lastActionTimestamps.googleSignIn > 2000) {
+                this.lastActionTimestamps.googleSignIn = now;
+                this.handleGoogleSignIn();
+            }
+            return;
+        }
+
+        // Google Sign Up
+        if (target.id === 'googleSignUp' || target.closest('#googleSignUp')) {
+            if (now - this.lastActionTimestamps.googleSignIn > 2000) {
+                this.lastActionTimestamps.googleSignIn = now;
+                this.handleGoogleSignIn();
+            }
+            return;
+        }
+
+        // Show Signup Form
+        if (target.id === 'showSignup' || target.closest('#showSignup')) {
+            e.preventDefault();
+            this.showSignupForm();
+            return;
+        }
+
+        // Show Login Form
+        if (target.id === 'showLogin' || target.closest('#showLogin')) {
+            e.preventDefault();
+            this.showLoginForm();
+            return;
+        }
+
+        // Logout
+        if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {
+            this.handleLogout();
+            return;
+        }
+    }
+
+    handleGlobalSubmit(e) {
+        const form = e.target;
+        const now = Date.now();
+
+        // Login Form
+        if (form.id === 'loginFormElement') {
+            e.preventDefault();
+            if (now - this.lastActionTimestamps.login > 2000) {
+                this.lastActionTimestamps.login = now;
+                this.handleEmailLogin();
+            }
+            return;
+        }
+
+        // Signup Form
+        if (form.id === 'signupFormElement') {
+            e.preventDefault();
+            if (now - this.lastActionTimestamps.signup > 2000) {
+                this.lastActionTimestamps.signup = now;
+                this.handleEmailSignup();
+            }
+            return;
+        }
+    }
+
+    // FIXED: Email verification URL handler
     async handleEmailVerificationFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
@@ -62,90 +185,22 @@ class AuthManager {
         }
     }
 
-    setupEventListeners() {
-        // Login form
-        const loginForm = document.getElementById('loginFormElement');
-        const signupForm = document.getElementById('signupFormElement');
-        const forgotPasswordLink = document.getElementById('forgotPassword');
-        const resendVerificationLink = document.getElementById('resendVerification');
-        
-        if (loginForm) {
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleEmailLogin();
-            });
-        }
-
-        if (forgotPasswordLink) {
-            forgotPasswordLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleForgotPassword();
-            });
-        }
-
-        if (resendVerificationLink) {
-            resendVerificationLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.resendVerificationEmail();
-            });
-        }
-
-        // Signup form
-        if (signupForm) {
-            signupForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleEmailSignup();
-            });
-        }
-
-        // Google sign in
-        const googleSignIn = document.getElementById('googleSignIn');
-        const googleSignUp = document.getElementById('googleSignUp');
-        
-        if (googleSignIn) {
-            googleSignIn.addEventListener('click', () => {
-                this.handleGoogleSignIn();
-            });
-        }
-
-        if (googleSignUp) {
-            googleSignUp.addEventListener('click', () => {
-                this.handleGoogleSignIn();
-            });
-        }
-
-        // Form switching
-        const showSignup = document.getElementById('showSignup');
-        const showLogin = document.getElementById('showLogin');
-        
-        if (showSignup) {
-            showSignup.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.showSignupForm();
-            });
-        }
-
-        if (showLogin) {
-            showLogin.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.showLoginForm();
-            });
-        }
-
-        // Logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                this.handleLogout();
-            });
-        }
-    }
-
-    // FIXED: Email login - allow unverified users but show banner
+    // FIXED: Email login with single execution
     async handleEmailLogin() {
+        console.log('🔐 Login attempt');
+        
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         
+        // Disable login button temporarily
+        const loginButton = document.querySelector('#loginFormElement button[type="submit"]');
+        const originalText = loginButton ? loginButton.innerHTML : '';
+        
+        if (loginButton) {
+            loginButton.disabled = true;
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+        }
+
         try {
             const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
@@ -155,8 +210,6 @@ class AuthManager {
             
             console.log('🔍 Post-reload verification status:', user.emailVerified);
             
-            // REMOVED: Don't block login for unverified users
-            // Instead, show verification banner but allow access
             if (!user.emailVerified) {
                 console.log('⚠️ User logged in but email not verified');
                 this.showSuccess('Login successful! Please verify your email to access all features.');
@@ -176,6 +229,14 @@ class AuthManager {
             
         } catch (error) {
             this.showError('Login failed: ' + error.message);
+        } finally {
+            // Re-enable login button
+            if (loginButton) {
+                setTimeout(() => {
+                    loginButton.disabled = false;
+                    loginButton.innerHTML = originalText;
+                }, 2000);
+            }
         }
     }
 
@@ -184,6 +245,8 @@ class AuthManager {
     signupAttempts = 0;
     
     async handleEmailSignup() {
+        console.log('📝 Signup attempt');
+        
         const name = document.getElementById('signupName').value;
         const email = document.getElementById('signupEmail').value;
         const password = document.getElementById('signupPassword').value;
@@ -218,16 +281,16 @@ class AuthManager {
             return;
         }
 
-        try {
-            // Disable the signup button and show loading state
-            const signupButton = document.querySelector('#signupFormElement button[type="submit"]');
-            const originalText = signupButton ? signupButton.innerHTML : '';
-            
-            if (signupButton) {
-                signupButton.disabled = true;
-                signupButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
-            }
+        // Disable the signup button and show loading state
+        const signupButton = document.querySelector('#signupFormElement button[type="submit"]');
+        const originalText = signupButton ? signupButton.innerHTML : '';
+        
+        if (signupButton) {
+            signupButton.disabled = true;
+            signupButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+        }
 
+        try {
             const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
             const user = userCredential.user;
             
@@ -261,16 +324,33 @@ class AuthManager {
         } catch (error) {
             this.showError('Signup failed: ' + error.message);
         } finally {
-            // Re-enable signup button
-            const signupButton = document.querySelector('#signupFormElement button[type="submit"]');
-            if (signupButton) {
-                signupButton.disabled = false;
-                signupButton.innerHTML = originalText;
-            }
+            // Re-enable signup button after delay
+            setTimeout(() => {
+                if (signupButton) {
+                    signupButton.disabled = false;
+                    signupButton.innerHTML = originalText;
+                }
+            }, 3000);
         }
     }
 
     async handleGoogleSignIn() {
+        console.log('🔐 Google sign-in attempt');
+        
+        // Disable Google buttons temporarily
+        const googleButtons = document.querySelectorAll('#googleSignIn, #googleSignUp');
+        googleButtons.forEach(btn => {
+            if (btn) {
+                btn.disabled = true;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                }, 3000);
+            }
+        });
+
         try {
             const result = await firebase.auth().signInWithPopup(googleProvider);
             const user = result.user;
@@ -302,6 +382,50 @@ class AuthManager {
         } catch (error) {
             console.error('Google sign in failed:', error);
             this.showError('Google sign in failed: ' + error.message);
+        }
+    }
+
+    // FIXED: Forgot password with robust click prevention
+    async handleForgotPassword() {
+        console.log('🔑 Forgot password attempt');
+        
+        const email = document.getElementById('loginEmail').value;
+        if (!email) {
+            this.showError('Please enter your email address');
+            return;
+        }
+
+        // Disable the button and show loading
+        const forgotPasswordBtn = document.getElementById('forgotPassword');
+        const originalText = forgotPasswordBtn ? forgotPasswordBtn.innerHTML : '';
+        
+        if (forgotPasswordBtn) {
+            forgotPasswordBtn.disabled = true;
+            forgotPasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        }
+
+        try {
+            await firebase.auth().sendPasswordResetEmail(email, this.actionCodeSettings);
+            this.showSuccess('Password reset email sent. Please check your inbox.');
+
+            // Keep button disabled for 30 seconds to prevent spam
+            setTimeout(() => {
+                if (forgotPasswordBtn) {
+                    forgotPasswordBtn.disabled = false;
+                    forgotPasswordBtn.innerHTML = originalText;
+                }
+            }, 30000);
+            
+        } catch (error) {
+            this.showError('Failed to send password reset email: ' + error.message);
+            
+            // Re-enable button on error after 5 seconds
+            setTimeout(() => {
+                if (forgotPasswordBtn) {
+                    forgotPasswordBtn.disabled = false;
+                    forgotPasswordBtn.innerHTML = originalText;
+                }
+            }, 5000);
         }
     }
 
@@ -494,32 +618,25 @@ class AuthManager {
     }
 
     showError(message) {
-        // Use your preferred notification system
         console.error('❌ Error:', message);
-        alert(message); // Replace with toast notification
+        // Replace with your toast notification system
+        if (typeof showNotification === 'function') {
+            showNotification(message, 'error');
+        } else {
+            alert(message);
+        }
     }
 
     showSuccess(message) {
         console.log('✅ Success:', message);
-        alert(message); // Replace with toast notification
-    }
-
-    async handleForgotPassword() {
-        const email = document.getElementById('loginEmail').value;
-        if (!email) {
-            this.showError('Please enter your email address');
-            return;
-        }
-
-        try {
-            await firebase.auth().sendPasswordResetEmail(email, this.actionCodeSettings);
-            this.showSuccess('Password reset email sent. Please check your inbox.');
-        } catch (error) {
-            this.showError('Failed to send password reset email: ' + error.message);
+        // Replace with your toast notification system
+        if (typeof showNotification === 'function') {
+            showNotification(message, 'success');
+        } else {
+            alert(message);
         }
     }
 
-    // FIXED: Resend verification email - only works when logged in
     async resendVerificationEmail() {
         const user = firebase.auth().currentUser;
         if (user) {
@@ -534,7 +651,6 @@ class AuthManager {
         }
     }
 
-    // FIXED: Email verification check - informative but not restrictive
     async checkEmailVerification(user) {
         console.log('🔍 Checking email verification for:', user.email);
         console.log('📧 Current verification status:', user.emailVerified);
@@ -559,7 +675,6 @@ class AuthManager {
     }
 
     handleUnverifiedAccess() {
-        // Optional: Restrict some features but allow basic access
         const restrictedElements = document.querySelectorAll('[data-requires-verification]');
         restrictedElements.forEach(element => {
             element.style.opacity = '0.5';
@@ -588,11 +703,22 @@ class AuthManager {
             banner.style.display = 'none';
         }
     }
-
-
 }
 
-// Initialize Auth Manager when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.authManager = new AuthManager();
-});
+// SINGLETON PATTERN - Only one instance allowed
+let authManagerInstance = null;
+
+function initializeAuthManager() {
+    if (!authManagerInstance) {
+        authManagerInstance = new AuthManager();
+        window.authManager = authManagerInstance;
+    }
+    return authManagerInstance;
+}
+
+// Initialize only once when DOM is loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAuthManager);
+} else {
+    initializeAuthManager();
+}

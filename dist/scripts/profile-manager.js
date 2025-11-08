@@ -2,165 +2,189 @@ class ProfileManager {
     constructor() {
         this.realTimeListeners = [];
         this.isLoadingActivities = false;
+        this.cache = {};
+        this.CACHE_TIMEOUT = 120000; // 2min cache
         this.init();
     }
 
+    // Caching helpers
+    getCache(key) {
+    // First check in-memory cache
+    const entry = this.cache[key];
+    if (entry && (Date.now() - entry.ts < this.CACHE_TIMEOUT)) {
+        return entry.data;
+    }
+    // Then try localStorage
+    try {
+        const lsEntry = localStorage.getItem(key);
+        if (lsEntry) {
+            const parsed = JSON.parse(lsEntry);
+            if (Date.now() - parsed.ts < this.CACHE_TIMEOUT) {
+                // Update in-memory cache for faster next access
+                this.cache[key] = parsed;
+                return parsed.data;
+            } else {
+                // Expired data, remove it from storage
+                localStorage.removeItem(key);
+            }
+        }
+    } catch (e) {
+        // localStorage unavailable or JSON parse error, ignore silently
+    }
+    return null;
+}
+
+    setCache(key, data) {
+    const entry = { ts: Date.now(), data };
+    // Update in-memory cache
+    this.cache[key] = entry;
+    // Also persist to localStorage
+    try {
+        localStorage.setItem(key, JSON.stringify(entry));
+    } catch (e) {
+        // localStorage may be full or unavailable; fail gracefully
+    }
+}
     async init() {
-        this.setupEventListeners();
-        await this.loadUserProfile();
-        this.setupRealTimeUpdates();
+        try {
+            this.setupEventListeners();
+            await this.loadUserProfile();
+            this.setupRealTimeUpdates();
+        } catch (e) {
+            console.error("Init error:", e);
+        }
     }
 
     setupEventListeners() {
-        // Download progress report
-        const downloadBtn = document.querySelector('.profile-actions button:nth-child(1)');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this.downloadProgressReport());
-        }
+        try {
+            const downloadBtn = document.querySelector('.profile-actions button:nth-child(1)');
+            if (downloadBtn) downloadBtn.addEventListener('click', () => this.downloadProgressReport());
 
-        // Share profile
-        const shareBtn = document.querySelector('.profile-actions button:nth-child(2)');
-        if (shareBtn) {
-            shareBtn.addEventListener('click', () => this.shareProfile());
-        }
+            const shareBtn = document.querySelector('.profile-actions button:nth-child(2)');
+            if (shareBtn) shareBtn.addEventListener('click', () => this.shareProfile());
 
-        // Use AuthManager's resend verification method
-        const verifyEmailBtn = document.getElementById('verifyEmailBtn');
-        if (verifyEmailBtn) {
-            verifyEmailBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (window.authManager) {
-                    window.authManager.resendVerificationEmail();
-                }
-            });
+            const verifyEmailBtn = document.getElementById('verifyEmailBtn');
+            if (verifyEmailBtn) {
+                verifyEmailBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.authManager) window.authManager.resendVerificationEmail();
+                });
+            }
+        } catch (e) {
+            console.error("setupEventListeners error:", e);
         }
     }
 
     setupRealTimeUpdates() {
-        const user = firebase.auth().currentUser;
-        if (!user) return;
+        try {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
 
-        // Real-time listener for user profile updates
-        const userListener = firebase.firestore().collection('users').doc(user.uid)
-            .onSnapshot((doc) => {
-                if (doc.exists) {
-                    this.updateRealTimeProfileData(doc.data());
-                }
-            }, (error) => {
-                console.error('Real-time profile update error:', error);
-            });
+            const userListener = firebase.firestore().collection('users').doc(user.uid)
+                .onSnapshot((doc) => {
+                    if (doc.exists) this.updateRealTimeProfileData(doc.data());
+                }, (error) => {
+                    console.error('Real-time profile update error:', error);
+                });
 
-        // Real-time listener for badges - only update if changes
-        const badgesListener = firebase.firestore().collection('user_badges').doc(user.uid)
-            .collection('badges')
-            .onSnapshot((snapshot) => {
-                if (!snapshot.empty && snapshot.docChanges().length > 0) {
-                    this.loadBadges(user.uid);
-                }
-            }, (error) => {
-                console.error('Real-time badges update error:', error);
-            });
+            const badgesListener = firebase.firestore().collection('user_badges').doc(user.uid)
+                .collection('badges')
+                .onSnapshot((snapshot) => {
+                    if (!snapshot.empty && snapshot.docChanges().length > 0)
+                        this.loadBadges(user.uid);
+                }, (error) => {
+                    console.error('Real-time badges update error:', error);
+                });
 
-        // Real-time listener for activities - only update if actual changes
-        const activitiesListener = firebase.firestore().collection('user_activities').doc(user.uid)
-            .collection('activities')
-            .onSnapshot((snapshot) => {
-                if (!this.isLoadingActivities && snapshot.docChanges().length > 0) {
-                    console.log('🔄 Real-time activity update detected');
-                    this.updateActivitiesFromSnapshot(snapshot);
-                }
-            }, (error) => {
-                console.error('Real-time activities update error:', error);
-            });
+            const activitiesListener = firebase.firestore().collection('user_activities').doc(user.uid)
+                .collection('activities')
+                .onSnapshot((snapshot) => {
+                    if (!this.isLoadingActivities && snapshot.docChanges().length > 0) {
+                        console.log('🔄 Real-time activity update detected');
+                        this.updateActivitiesFromSnapshot(snapshot);
+                    }
+                }, (error) => {
+                    console.error('Real-time activities update error:', error);
+                });
 
-        // Store listeners for cleanup
-        this.realTimeListeners = [userListener, badgesListener, activitiesListener];
+            this.realTimeListeners = [userListener, badgesListener, activitiesListener];
+        } catch (e) {
+            console.error("setupRealTimeUpdates error:", e);
+        }
     }
 
     updateActivitiesFromSnapshot(snapshot) {
-        const activityList = document.getElementById('activityList');
-        if (!activityList) return;
+        try {
+            const activityList = document.getElementById('activityList');
+            if (!activityList) return;
 
-        const activities = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return `
-                <div class="activity-item">
-                    <div class="activity-icon">
-                        <i class="${data.icon || 'fas fa-task'}"></i>
+            const activities = snapshot.docs.map(doc => {
+                const data = doc.data();
+                const safeDate = this.formatDate(data.timestamp);
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="${data.icon || 'fas fa-task'}"></i>
+                        </div>
+                        <div class="activity-info">
+                            <p class="activity-title">${data.title}</p>
+                            ${data.score ? `<span class="activity-score">Score: ${data.score}%</span>` : ''}
+                            <span class="activity-time">${safeDate}</span>
+                        </div>
                     </div>
-                    <div class="activity-info">
-                        <p class="activity-title">${data.title}</p>
-                        ${data.score ? `<span class="activity-score">Score: ${data.score}%</span>` : ''}
-                        <span class="activity-time">${this.formatDate(data.timestamp)}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
 
-        if (activities) {
-            activityList.innerHTML = activities;
-        } else {
-            activityList.innerHTML = `
+            activityList.innerHTML = activities || `
                 <div class="empty-state">
                     <i class="fas fa-tasks"></i>
                     <p>Complete quizzes and case studies to see your activity here</p>
                 </div>
             `;
+        } catch (e) {
+            console.error("updateActivitiesFromSnapshot error:", e);
         }
-    }
-
-    cleanup() {
-        // Unsubscribe from all real-time listeners
-        this.realTimeListeners.forEach(unsubscribe => {
-            if (typeof unsubscribe === 'function') {
-                unsubscribe();
-            }
-        });
-        this.realTimeListeners = [];
     }
 
     updateRealTimeProfileData(userData) {
-        // Update streak display
-        const streakElement = document.querySelector('.streak-counter');
-        if (streakElement && userData.currentStreak !== undefined) {
-            streakElement.textContent = userData.currentStreak;
-        }
+        try {
+            const streakElement = document.querySelector('.streak-counter');
+            if (streakElement && userData.currentStreak !== undefined)
+                streakElement.textContent = userData.currentStreak;
 
-        // Update overall progress
-        const progressElement = document.querySelector('.progress-percentage');
-        if (progressElement && userData.overallProgress !== undefined) {
-            progressElement.textContent = `${userData.overallProgress}%`;
-        }
+            const progressElement = document.querySelector('.progress-percentage');
+            if (progressElement && userData.overallProgress !== undefined)
+                progressElement.textContent = `${userData.overallProgress}%`;
 
-        // Update last active time
-        const lastActiveElement = document.querySelector('.last-active');
-        if (lastActiveElement && userData.lastActive) {
-            lastActiveElement.textContent = this.formatRelativeTime(userData.lastActive.toDate());
-        }
+            const lastActiveElement = document.querySelector('.last-active');
+            if (lastActiveElement && userData.lastActive)
+                lastActiveElement.textContent = this.formatRelativeTime(userData.lastActive.toDate());
 
-        // Update user name if available
-        const userNameElement = document.querySelector('.user-name');
-        if (userNameElement && userData.name) {
-            userNameElement.textContent = userData.name;
+            const userNameElement = document.querySelector('.user-name');
+            if (userNameElement && userData.name)
+                userNameElement.textContent = userData.name;
+        } catch (e) {
+            console.error("updateRealTimeProfileData error:", e);
         }
     }
 
     async loadUserProfile() {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-            console.log('No user logged in');
-            return;
-        }
-
         try {
-            // Update email verification status
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                console.log('No user logged in');
+                return;
+            }
             this.updateEmailVerificationStatus(user);
 
-            // Load real-time user data
-            const userData = await window.firestoreService.getUserProfile(user.uid);
+            // --- CACHE-FIRST profile loading ---
+            let userData = this.getCache('userProfile');
+            if (!userData) {
+                userData = await window.firestoreService.getUserProfile(user.uid);
+                this.setCache('userProfile', userData);
+            }
             this.updateRealTimeProfileData(userData || {});
 
-            // Load profile-specific data
             await Promise.all([
                 this.loadBadges(user.uid),
                 this.loadRecentActivity(user.uid),
@@ -173,7 +197,6 @@ class ProfileManager {
 
     async getUserProgressStats(uid) {
         try {
-            // Get comprehensive data like dashboard does
             const [modulesProgress, quizResults, caseStudyResults, badges, streakData] = await Promise.all([
                 this.getUserModulesProgress(uid),
                 this.getQuizResults(uid),
@@ -181,12 +204,10 @@ class ProfileManager {
                 this.getUserBadges(uid),
                 this.getUserStreak(uid)
             ]);
-
-            // Calculate statistics using the same method as dashboard
             return await this.calculateComprehensiveStats(
-                modulesProgress, 
-                quizResults, 
-                caseStudyResults, 
+                modulesProgress,
+                quizResults,
+                caseStudyResults,
                 badges,
                 streakData
             );
@@ -197,73 +218,75 @@ class ProfileManager {
     }
 
     async calculateComprehensiveStats(modulesProgress, quizResults, caseStudyResults, badges, streakData = {}) {
-        // Calculate module completion
-        const completedModules = modulesProgress.filter(module => module.completed);
-        const moduleCompletionRate = modulesProgress.length > 0 ? 
-            (completedModules.length / 6) * 100 : 0;
+        try {
+            const completedModules = modulesProgress.filter(module => module.completed);
+            const moduleCompletionRate = modulesProgress.length > 0 ?
+                (completedModules.length / 6) * 100 : 0;
 
-        // Calculate average quiz score
-        const allScores = [
-            ...quizResults.map(quiz => quiz.score || 0),
-            ...caseStudyResults.map(caseStudy => caseStudy.score || 0)
-        ];
-        const averageScore = allScores.length > 0 ? 
-            Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
+            const allScores = [
+                ...quizResults.map(quiz => quiz.score || 0),
+                ...caseStudyResults.map(caseStudy => caseStudy.score || 0)
+            ];
+            const averageScore = allScores.length > 0 ?
+                Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
 
-        // Calculate overall progress (weighted average) - SAME AS DASHBOARD
-        const moduleWeight = 0.4;
-        const quizWeight = 0.4;  
-        const badgeWeight = 0.2;
+            const moduleWeight = 0.4;
+            const quizWeight = 0.4;
+            const badgeWeight = 0.2;
+            const moduleProgress = moduleCompletionRate;
+            const quizProgress = averageScore;
+            const badgeProgress = Math.min((badges.length / 6) * 100, 100);
 
-        const moduleProgress = moduleCompletionRate;
-        const quizProgress = averageScore;
-        const badgeProgress = Math.min((badges.length / 6) * 100, 100);
+            const overallProgress = Math.round(
+                (moduleProgress * moduleWeight) +
+                (quizProgress * quizWeight) +
+                (badgeProgress * badgeWeight)
+            );
+            const currentStreak = streakData.currentStreak || 1;
 
-        const overallProgress = Math.round(
-            (moduleProgress * moduleWeight) +
-            (quizProgress * quizWeight) +
-            (badgeProgress * badgeWeight)
-        );
-
-        // Use actual streak data or default to 1
-        const currentStreak = streakData.currentStreak || 1;
-
-        return {
-            overallProgress: overallProgress,
-            averageScore: averageScore,
-            completedModules: completedModules.length,
-            totalModules: 6,
-            badgesEarned: badges.length,
-            totalBadges: 6,
-            currentStreak: currentStreak,
-            longestStreak: streakData.longestStreak || 1,
-            totalQuizzes: quizResults.length + caseStudyResults.length,
-            moduleCompletionRate: Math.round(moduleCompletionRate),
-            modulesProgress: modulesProgress,
-            quizResults: quizResults,
-            caseStudyResults: caseStudyResults,
-            badges: badges
-        };
+            return {
+                overallProgress: overallProgress,
+                averageScore: averageScore,
+                completedModules: completedModules.length,
+                totalModules: 6,
+                badgesEarned: badges.length,
+                totalBadges: 6,
+                currentStreak: currentStreak,
+                longestStreak: streakData.longestStreak || 1,
+                totalQuizzes: quizResults.length + caseStudyResults.length,
+                moduleCompletionRate: Math.round(moduleCompletionRate),
+                modulesProgress: modulesProgress,
+                quizResults: quizResults,
+                caseStudyResults: caseStudyResults,
+                badges: badges
+            };
+        } catch (e) {
+            console.error("calculateComprehensiveStats error:", e);
+            return this.getDefaultProgressStats();
+        }
     }
 
     async getUserStreak(uid) {
         try {
             if (!window.firestoreService) return { currentStreak: 1, longestStreak: 1 };
-            
+
+            let cacheStreak = this.getCache('userStreak');
+            if (cacheStreak) return cacheStreak;
+
             const userDoc = await firebase.firestore()
                 .collection('users')
                 .doc(uid)
                 .get();
-                
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                return {
+                const streak = {
                     currentStreak: userData.currentStreak || 1,
                     longestStreak: userData.longestStreak || 1,
                     lastLogin: userData.lastLogin
                 };
+                this.setCache('userStreak', streak);
+                return streak;
             }
-            
             return { currentStreak: 1, longestStreak: 1 };
         } catch (error) {
             console.error('Error getting user streak:', error);
@@ -289,23 +312,25 @@ class ProfileManager {
             badges: []
         };
     }
-
-    async loadBadges(uid) {
+    
+        async loadBadges(uid) {
         try {
-            console.log('🏆 Loading badges for user:', uid);
             const badgesGrid = document.getElementById('badgesGrid');
             if (!badgesGrid) return;
 
-            // Get badges from Firestore
-            const badgesSnapshot = await firebase.firestore()
-                .collection('user_badges')
-                .doc(uid)
-                .collection('badges')
-                .get();
+            // --- CACHE-FIRST badges loading ---
+            let cachedBadges = this.getCache(`badges-${uid}`);
+            let badgesSnapshot = null;
+            if (!cachedBadges) {
+                badgesSnapshot = await firebase.firestore()
+                    .collection('user_badges')
+                    .doc(uid)
+                    .collection('badges')
+                    .get();
+                cachedBadges = badgesSnapshot.docs.map(doc => doc.data());
+                this.setCache(`badges-${uid}`, cachedBadges);
+            }
 
-            console.log('📊 Found badges:', badgesSnapshot.docs.length);
-
-            // Define default badges if ModulesManager badges are not available
             const defaultBadges = [
                 {
                     id: 'phishing_expert',
@@ -345,19 +370,13 @@ class ProfileManager {
                 }
             ];
 
-            // Get available badges from ModulesManager or use defaults
             const availableBadges = window.modulesManager?.badges || defaultBadges;
-            
             const badgesHtml = availableBadges.map(badge => {
-                // Look for badge using moduleId instead of badge.id
-                const earnedBadge = badgesSnapshot.docs.find(doc => 
-                    doc.data().moduleId === badge.id || 
-                    doc.id === badge.id || 
-                    doc.data().id === badge.id
+                const earnedBadge = (cachedBadges || []).find(data =>
+                    data.moduleId === badge.id || data.id === badge.id
                 );
                 const isEarned = !!earnedBadge;
-                const earnedDate = earnedBadge ? this.formatDate(earnedBadge.data().earnedAt) : null;
-
+                const earnedDate = earnedBadge ? this.formatDate(earnedBadge.earnedAt) : null;
                 return `
                     <div class="badge-card ${isEarned ? 'earned' : 'locked'}">
                         <div class="badge-icon" style="background: ${isEarned ? 'var(--color-success-light)' : 'var(--color-muted)'}">
@@ -380,29 +399,25 @@ class ProfileManager {
                     <p>Complete modules to earn badges</p>
                 </div>
             `;
-            console.log('✅ Badges loaded successfully');
         } catch (error) {
-            console.error('❌ Error loading badges:', error);
-            badgesGrid.innerHTML = `
-                <div class="error-state">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Unable to load badges. Please try again later.</p>
-                </div>
-            `;
+            console.error('Error loading badges:', error);
+            const badgesGrid = document.getElementById('badgesGrid');
+            if (badgesGrid) {
+                badgesGrid.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Unable to load badges. Please try again later.</p>
+                    </div>
+                `;
+            }
         }
     }
 
     async loadRecentActivity(uid) {
-        // Set flag to prevent real-time listener from triggering during load
         this.isLoadingActivities = true;
-        
         try {
-            console.log('🔄 Loading recent activity for user:', uid);
             const activityList = document.getElementById('activityList');
-            if (!activityList) {
-                console.log('❌ Activity list element not found');
-                return;
-            }
+            if (!activityList) return;
 
             activityList.innerHTML = `
                 <div class="loading-state">
@@ -411,174 +426,165 @@ class ProfileManager {
                 </div>
             `;
 
-            // Get recent activities
-            console.log('📥 Fetching activities from Firestore...');
-            
-            const recentActivities = [];
+            // --- CACHE-FIRST activities loading ---
+            let cachedActivities = this.getCache(`activities-${uid}`);
+            let recentActivities = cachedActivities || [];
             let indexError = false;
-            
-            // Create reference to user's activities collection
-            const userActivitiesRef = firebase.firestore()
-                .collection('user_activities')
-                .doc(uid)
-                .collection('activities');
 
-            // Get current activities
-            const activitiesSnapshot = await userActivitiesRef
-                .orderBy('timestamp', 'desc')
+            if (!cachedActivities) {
+                const userActivitiesRef = firebase.firestore()
+                    .collection('user_activities')
+                    .doc(uid)
+                    .collection('activities');
+                       // Get current activities
+        const activitiesSnapshot = await userActivitiesRef
+            .orderBy('timestamp', 'desc')
+            .limit(5)
+            .get();
+
+        // Try quiz results
+        try {
+            console.log('🔍 Fetching quiz results...');
+            const quizResults = await firebase.firestore()
+                .collection('quizResults')
+                .where('userId', '==', uid)
+                .orderBy('completedAt', 'desc')
                 .limit(5)
                 .get();
+            
+            if (quizResults.empty) {
+                console.log('ℹ️ No quiz results found');
+            } else {
+                recentActivities.push(...quizResults.docs.map(doc => {
+                    const data = doc.data();
+                    console.log('✅ Found quiz:', data.moduleTitle);
+                    
+                    // FIX: Handle null timestamp
+                    const timestamp = data.completedAt || new Date();
+                    
+                    return {
+                        type: 'quiz',
+                        title: `Completed ${data.moduleTitle} Quiz`,
+                        score: data.score,
+                        timestamp: timestamp,
+                        icon: 'fas fa-check-circle'
+                    };
+                }));
+                console.log('📊 Quiz results loaded:', quizResults.size);
+            }
+        } catch (quizError) {
+            console.error('❌ Error fetching quiz results:', quizError);
+            if (quizError.message.includes('requires an index')) {
+                indexError = true;
+            }
+        }
 
-            // Try quiz results
-            try {
-                console.log('🔍 Fetching quiz results...');
-                const quizResults = await firebase.firestore()
-                    .collection('quizResults')
-                    .where('userId', '==', uid)
-                    .orderBy('completedAt', 'desc')
-                    .limit(5)
-                    .get();
-                
-                if (quizResults.empty) {
-                    console.log('ℹ️ No quiz results found');
-                } else {
-                    recentActivities.push(...quizResults.docs.map(doc => {
-                        const data = doc.data();
-                        console.log('✅ Found quiz:', data.moduleTitle);
-                        return {
-                            type: 'quiz',
-                            title: `Completed ${data.moduleTitle} Quiz`,
-                            score: data.score,
-                            timestamp: data.completedAt,
-                            icon: 'fas fa-check-circle'
-                        };
-                    }));
-                    console.log('📊 Quiz results loaded:', quizResults.size);
-                }
-            } catch (quizError) {
-                console.error('❌ Error fetching quiz results:', quizError);
-                if (quizError.message.includes('requires an index')) {
-                    indexError = true;
-                }
+        // Try case studies
+        try {
+            console.log('🔍 Fetching case studies...');
+            const caseStudyResults = await firebase.firestore()
+                .collection('caseStudyQuizzes')
+                .where('userId', '==', uid)
+                .orderBy('completedAt', 'desc')
+                .limit(5)
+                .get();
+            
+            if (caseStudyResults.empty) {
+                console.log('ℹ️ No case study results found');
+            } else {
+                recentActivities.push(...caseStudyResults.docs.map(doc => {
+                    const data = doc.data();
+                    console.log('✅ Found case study:', data.title);
+                    
+                    // FIX: Handle null timestamp
+                    const timestamp = data.completedAt || new Date();
+                    
+                    return {
+                        type: 'case_study',
+                        title: `Completed ${data.title} Case Study`,
+                        score: data.score,
+                        timestamp: timestamp,
+                        icon: 'fas fa-briefcase'
+                    };
+                }));
+                console.log('📊 Case study results loaded:', caseStudyResults.size);
+            }
+        } catch (caseError) {
+            console.error('❌ Error fetching case studies:', caseError);
+            if (caseError.message.includes('requires an index')) {
+                indexError = true;
+            }
+        }
+
+        // Try badges
+        try {
+            console.log('🔍 Fetching badge earnings...');
+            const badgeEarnings = await firebase.firestore()
+                .collection('user_badges')
+                .doc(uid)
+                .collection('badges')
+                .orderBy('earnedAt', 'desc')
+                .limit(5)
+                .get();
+            
+            if (badgeEarnings.empty) {
+                console.log('ℹ️ No badge earnings found');
+            } else {
+                recentActivities.push(...badgeEarnings.docs.map(doc => {
+                    const data = doc.data();
+                    console.log('✅ Found badge:', data.name);
+                    
+                    // FIX: Handle null timestamp
+                    const timestamp = data.earnedAt || new Date();
+                    
+                    return {
+                        type: 'badge',
+                        title: `Earned ${data.name} Badge`,
+                        timestamp: timestamp,
+                        icon: 'fas fa-trophy'
+                    };
+                }));
+                console.log('📊 Badge earnings loaded:', badgeEarnings.size);
+            }
+        } catch (badgeError) {
+            console.error('❌ Error fetching badges:', badgeError);
+        }
+
+        if (indexError) {
+            activityList.innerHTML = `
+                <div class="info-message">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Setting up activity tracking... This may take a few minutes.</p>
+                </div>
+            `;
+            return;
+        }
+                // after fetching, store to cache
+                this.setCache(`activities-${uid}`, recentActivities);
             }
 
-            // Try case studies
-            try {
-                console.log('🔍 Fetching case studies...');
-                const caseStudyResults = await firebase.firestore()
-                    .collection('caseStudyQuizzes')
-                    .where('userId', '==', uid)
-                    .orderBy('completedAt', 'desc')
-                    .limit(5)
-                    .get();
-                
-                if (caseStudyResults.empty) {
-                    console.log('ℹ️ No case study results found');
-                } else {
-                    recentActivities.push(...caseStudyResults.docs.map(doc => {
-                        const data = doc.data();
-                        console.log('✅ Found case study:', data.title);
-                        return {
-                            type: 'case_study',
-                            title: `Completed ${data.title} Case Study`,
-                            score: data.score,
-                            timestamp: data.completedAt,
-                            icon: 'fas fa-briefcase'
-                        };
-                    }));
-                    console.log('📊 Case study results loaded:', caseStudyResults.size);
-                }
-            } catch (caseError) {
-                console.error('❌ Error fetching case studies:', caseError);
-                if (caseError.message.includes('requires an index')) {
-                    indexError = true;
-                }
-            }
-
-            // Try badges
-            try {
-                console.log('🔍 Fetching badge earnings...');
-                const badgeEarnings = await firebase.firestore()
-                    .collection('user_badges')
-                    .doc(uid)
-                    .collection('badges')
-                    .orderBy('earnedAt', 'desc')
-                    .limit(5)
-                    .get();
-                
-                if (badgeEarnings.empty) {
-                    console.log('ℹ️ No badge earnings found');
-                } else {
-                    recentActivities.push(...badgeEarnings.docs.map(doc => {
-                        const data = doc.data();
-                        console.log('✅ Found badge:', data.name);
-                        return {
-                            type: 'badge',
-                            title: `Earned ${data.name} Badge`,
-                            timestamp: data.earnedAt,
-                            icon: 'fas fa-trophy'
-                        };
-                    }));
-                    console.log('📊 Badge earnings loaded:', badgeEarnings.size);
-                }
-            } catch (badgeError) {
-                console.error('❌ Error fetching badges:', badgeError);
-            }
-
-            if (indexError) {
-                activityList.innerHTML = `
-                    <div class="info-message">
-                        <i class="fas fa-info-circle"></i>
-                        <p>Setting up activity tracking... This may take a few minutes.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Sort activities by timestamp
-            recentActivities.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
-
-            // Keep only the most recent 5 activities
+            recentActivities.sort((a, b) => {
+                const timeA = this.getSafeTimestamp(a.timestamp);
+                const timeB = this.getSafeTimestamp(b.timestamp);
+                return timeB - timeA;
+            });
             const latestActivities = recentActivities.slice(0, 5);
 
-            // Only update Firestore if we have new activities
+            // UI rendering unchanged
             if (latestActivities.length > 0) {
-                const batch = firebase.firestore().batch();
-
-                // Delete all existing activities
-                const existingActivities = await userActivitiesRef.get();
-                existingActivities.docs.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-
-                // Add the 5 most recent activities
-                latestActivities.forEach((activity, index) => {
-                    const newActivityRef = userActivitiesRef.doc();
-                    batch.set(newActivityRef, {
-                        ...activity,
-                        order: index
-                    });
-                });
-
-                // Commit the batch
-                await batch.commit();
-                console.log('✅ Activities updated in Firestore');
-            }
-
-            // Update the UI
-            if (latestActivities.length > 0) {
-                activityList.innerHTML = latestActivities.map(activity => `
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <i class="${activity.icon}"></i>
+                activityList.innerHTML = latestActivities.map(activity => {
+                    const safeDate = this.formatDate(activity.timestamp);
+                    return `
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="${activity.icon}"></i></div>
+                            <div class="activity-info">
+                                <p class="activity-title">${activity.title}</p>
+                                ${activity.score ? `<span class="activity-score">Score: ${activity.score}%</span>` : ''}
+                                <span class="activity-time">${safeDate}</span>
+                            </div>
                         </div>
-                        <div class="activity-info">
-                            <p class="activity-title">${activity.title}</p>
-                            ${activity.score ? `<span class="activity-score">Score: ${activity.score}%</span>` : ''}
-                            <span class="activity-time">${this.formatDate(activity.timestamp)}</span>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             } else {
                 activityList.innerHTML = `
                     <div class="empty-state">
@@ -587,17 +593,18 @@ class ProfileManager {
                     </div>
                 `;
             }
-
         } catch (error) {
             console.error('Error loading recent activity:', error);
-            activityList.innerHTML = `
-                <div class="error-state">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Unable to load activities. Please try again later.</p>
-                </div>
-            `;
+            const activityList = document.getElementById('activityList');
+            if (activityList) {
+                activityList.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Unable to load activities. Please try again later.</p>
+                    </div>
+                `;
+            }
         } finally {
-            // Reset the flag after loading is complete
             setTimeout(() => {
                 this.isLoadingActivities = false;
             }, 1000);
@@ -609,20 +616,22 @@ class ProfileManager {
             const certificationsGrid = document.getElementById('certificationsGrid');
             if (!certificationsGrid) return;
 
-            const certifications = await firebase.firestore()
-                .collection('userCertifications')
-                .where('userId', '==', uid)
-                .orderBy('earnedAt', 'desc')
-                .get();
+            let cachedCerts = this.getCache(`certs-${uid}`);
+            if (!cachedCerts) {
+                const certifications = await firebase.firestore()
+                    .collection('userCertifications')
+                    .where('userId', '==', uid)
+                    .orderBy('earnedAt', 'desc')
+                    .get();
+                cachedCerts = certifications.docs.map(doc => doc.data());
+                this.setCache(`certs-${uid}`, cachedCerts);
+            }
 
-            certificationsGrid.innerHTML = certifications.docs.map(doc => {
-                const cert = doc.data();
+            certificationsGrid.innerHTML = cachedCerts.map(cert => {
                 return `
                     <div class="certification-card">
                         <div class="certification-header">
-                            <div class="certification-icon">
-                                <i class="fas fa-certificate"></i>
-                            </div>
+                            <div class="certification-icon"><i class="fas fa-certificate"></i></div>
                             <div class="certification-info">
                                 <h4>${cert.name}</h4>
                                 <span class="certification-date">${this.formatDate(cert.earnedAt)}</span>
@@ -630,7 +639,7 @@ class ProfileManager {
                         </div>
                         <div class="certification-details">
                             <p>${cert.description}</p>
-                            <button class="btn-secondary" onclick="window.profileManager.downloadCertificate('${doc.id}')">
+                            <button class="btn-secondary" onclick="window.profileManager.downloadCertificate('${cert.id}')">
                                 <i class="fas fa-download"></i> Download
                             </button>
                         </div>
@@ -642,37 +651,43 @@ class ProfileManager {
                     <p>Complete modules to earn certifications</p>
                 </div>
             `;
-
         } catch (error) {
             console.error('Error loading certifications:', error);
-            certificationsGrid.innerHTML = `
-                <div class="error-state">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Unable to load certifications. Please try again later.</p>
-                </div>
-            `;
+            const certificationsGrid = document.getElementById('certificationsGrid');
+            if (certificationsGrid) {
+                certificationsGrid.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Unable to load certifications. Please try again later.</p>
+                    </div>
+                `;
+            }
         }
+    }
+
+    // Helper: null-safe timestamp
+    getSafeTimestamp(timestamp) {
+        if (!timestamp) return new Date();
+        if (timestamp.toDate && typeof timestamp.toDate === 'function') return timestamp.toDate();
+        if (timestamp instanceof Date) return timestamp;
+        if (typeof timestamp === 'string' || typeof timestamp === 'number') return new Date(timestamp);
+        console.warn('Invalid timestamp format, using current time:', timestamp);
+        return new Date();
     }
 
     formatDate(timestamp) {
         if (!timestamp) return 'N/A';
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     formatRelativeTime(date) {
         const now = new Date();
         const diffInSeconds = Math.floor((now - date) / 1000);
-        
         if (diffInSeconds < 60) return 'Just now';
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
         if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
         if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-        
         return this.formatDate(date);
     }
 
@@ -683,17 +698,9 @@ class ProfileManager {
                 this.showError('Please log in to download your progress report');
                 return;
             }
-
-            console.log('📊 Generating PDF progress report...');
-            
-            // Show loading state
             this.showLoading('Generating your progress report...');
-
-            // Use the same progress calculation as dashboard
             const progressStats = await this.getUserProgressStats(user.uid);
             const userData = await window.firestoreService.getUserProfile(user.uid);
-
-            // Create PDF content with accurate progress data
             const pdfContent = this.generatePDFReport({
                 user: {
                     name: userData?.name || user.displayName || 'CyberSafe User',
@@ -739,12 +746,8 @@ class ProfileManager {
                 })),
                 generatedAt: new Date().toLocaleString()
             });
-
-            // Download PDF
             this.downloadPDF(pdfContent, `cybersafe-report-${new Date().toISOString().split('T')[0]}.pdf`);
-            
             this.showSuccess('PDF progress report downloaded successfully!');
-
         } catch (error) {
             console.error('Error generating PDF report:', error);
             this.showError('Failed to generate progress report. Please try again.');
@@ -1753,27 +1756,41 @@ ${window.location.origin}
             notification.remove();
         }, 5000);
     }
+    
+    cleanupRealTimeListeners() {
+        this.realTimeListeners.forEach(unsubscribe => {
+            if (unsubscribe && typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        });
+        this.realTimeListeners = [];
+    }
+    
+    cleanup() {
+        this.cleanupRealTimeListeners();
+        this.cache = {}; // Clear memory cache
+    }
 }
 
-// Initialize Profile Manager when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for Firebase to be initialized
-    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-        window.profileManager = new ProfileManager();
-    } else {
-        // Fallback: initialize when firebase is ready
-        const checkFirebase = setInterval(() => {
-            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                clearInterval(checkFirebase);
-                window.profileManager = new ProfileManager();
-            }
-        }, 100);
-    }
-});
 
-// Cleanup when page is unloaded
-window.addEventListener('beforeunload', () => {
-    if (window.profileManager) {
-        window.profileManager.cleanup();
-    }
-});
+
+    // Update your existing DOMContentLoaded listener
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            window.profileManager = new ProfileManager();
+        } else {
+            const checkFirebase = setInterval(() => {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                    clearInterval(checkFirebase);
+                    window.profileManager = new ProfileManager();
+                }
+            }, 100);
+        }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (window.profileManager) {
+            window.profileManager.cleanup();
+        }
+    });

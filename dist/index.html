@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="styles/email-verification.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="shortcut icon" href="assets/icons/logo.svg" type="image/x-icon">
+    <link rel="shortcut icon" href="assets/icons/logo.svg" type="image/svg">
 </head>
 <body>
     <!-- Loading Animation -->
@@ -537,7 +537,7 @@
         }, 1000);
     });
     </script>
-    
+    <script src="scripts/notification.js"></script>
     <script src="scripts/auth.js"></script>
     <script src="scripts/dashboard.js"></script>
     <script src="scripts/modules.js"></script>
@@ -546,7 +546,6 @@
     <script src="scripts/module-content.js"></script>
     <script src="scripts/casestudy.js"></script>
     <script src="scripts/navigation-manager.js"></script>
-    <script src="scripts/notification.js"></script>
     <script src="scripts/app-enhancements.js"></script>
     <script src="scripts/profile-manager.js"></script>
     <script src="scripts/app.js"></script>
@@ -558,7 +557,7 @@ if ('serviceWorker' in navigator) {
   // Register Service Worker
   navigator.serviceWorker.register('/service-worker.js')
     .then(registration => {
-      console.log('✅ Service Worker registered:', registration);
+      console.log('Service Worker registered:', registration);
       
       // Check for updates every time the page loads
       registration.update();
@@ -566,7 +565,7 @@ if ('serviceWorker' in navigator) {
       // Listen for updates
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
-        console.log('🔄 New service worker found...');
+        console.log(' New service worker found...');
         
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -585,7 +584,7 @@ if ('serviceWorker' in navigator) {
       });
     })
     .catch(error => {
-      console.log('❌ Service Worker registration failed:', error);
+      console.log('Service Worker registration failed:', error);
     });
 
   // Listen for messages from service worker
