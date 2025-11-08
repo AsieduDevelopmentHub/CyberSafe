@@ -4,102 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - CyberSafe</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <link rel="shortcut icon" href="../assets/icons/logo.svg"" type="image/x-icon">
+    <title>CyberSafe Auth</title>
+    <script>
+        // Check URL parameters and redirect to appropriate page
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        const oobCode = urlParams.get('oobCode');
+
+        if (mode === 'resetPassword') {
+            // Redirect to password reset page
+            window.location.href = `reset-password.html?mode=resetPassword&oobCode=${oobCode}`;
+        } else if (mode === 'verifyEmail') {
+            // Redirect to email verification page
+            window.location.href = `verify.html?mode=verifyEmail&oobCode=${oobCode}`;
+        } else {
+            // Invalid or no mode parameter - redirect to main site
+            window.location.href = 'https://cybersafe.auralenx.com';
+        }
+    </script>
 </head>
 
 <body>
-    <div class="auth-container">
-        <!-- Header -->
-        <div class="auth-header">
-            <div class="logo">
-                <img src="../assets/icons/logo.svg" class="logo-icon">
-                <h1>CyberSafe</h1>
-            </div>
-            <p class="subtitle">Enterprise Cybersecurity Education</p>
-        </div>
-
-        <!-- Main Card -->
-        <div class="auth-card">
-            <div class="card-header">
-                <h2>Reset Your Password</h2>
-                <p>Enter your new password below</p>
-            </div>
-
-            <!-- Password Reset Form -->
-            <form id="resetForm" class="auth-form">
-                <div class="form-group">
-                    <label for="newPassword">New Password</label>
-                    <div class="password-input-container">
-                        <input type="password" id="newPassword" placeholder="Enter your new password" required
-                            minlength="8">
-                        <button type="button" class="toggle-password" onclick="togglePassword('newPassword')">
-                            👁️
-                        </button>
-                    </div>
-                    <div class="password-strength">
-                        <div class="strength-bar">
-                            <div class="strength-fill" id="strengthFill"></div>
-                        </div>
-                        <span class="strength-text" id="strengthText">Weak</span>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm New Password</label>
-                    <div class="password-input-container">
-                        <input type="password" id="confirmPassword" placeholder="Confirm your new password" required>
-                        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
-                            👁️
-                        </button>
-                    </div>
-                    <div class="password-match" id="passwordMatch">
-                        <!-- Match indicator will appear here -->
-                    </div>
-                </div>
-
-                <!-- Security Requirements -->
-                <div class="security-requirements">
-                    <h4>Password Requirements:</h4>
-                    <ul>
-                        <li id="reqLength">✓ At least 8 characters</li>
-                        <li id="reqUpper">✓ One uppercase letter</li>
-                        <li id="reqLower">✓ One lowercase letter</li>
-                        <li id="reqNumber">✓ One number</li>
-                        <li id="reqSpecial">✓ One special character</li>
-                    </ul>
-                </div>
-
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    <span class="btn-text">Reset Password</span>
-                    <div class="btn-spinner" style="display: none;">
-                        <div class="spinner"></div>
-                    </div>
-                </button>
-            </form>
-
-            <!-- Status Messages -->
-            <div id="statusMessage" class="status-message"></div>
-
-            <!-- Support Section -->
-            <div class="support-section">
-                <p>Need help? <a href="mailto:auralenx.team@gmail.com">Contact Support</a></p>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="auth-footer">
-            <p>&copy; 2025 CyberSafe. All rights reserved.</p>
-            <p>Enterprise Cybersecurity Education Platform</p>
-        </div>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h2>Redirecting...</h2>
+        <p>Please wait while we take you to the right page.</p>
     </div>
-
-    <script src="../scripts/firebase-config.js"></script>
-    <script src="script.js"></script>
 </body>
 
 </html>

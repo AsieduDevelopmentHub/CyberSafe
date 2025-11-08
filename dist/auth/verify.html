@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - CyberSafe</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+</head>
+
+<body>
+    <div class="auth-container">
+        <!-- Header -->
+        <div class="auth-header">
+            <div class="logo">
+                <img src="../assets/icons/logo.svg" class="logo-icon">
+                <h1>CyberSafe</h1>
+            </div>
+            <p class="subtitle">Email Verification</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="auth-card">
+            <!-- Loading State -->
+            <div id="loadingState" class="verification-state">
+                <div class="state-icon loading">🔄</div>
+                <h2>Verifying Your Email</h2>
+                <p>Please wait while we confirm your email address...</p>
+                <div class="loading-spinner"></div>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState" class="verification-state" style="display: none;">
+                <div class="state-icon success">✅</div>
+                <h2>Email Verified Successfully!</h2>
+                <p>Your email address has been confirmed and your CyberSafe account is now active.</p>
+
+                <div class="benefits-section">
+                    <h4>Welcome to CyberSafe! You now have access to:</h4>
+                    <div class="benefits-grid">
+                        <div class="benefit-item">
+                            <span class="benefit-icon">📚</span>
+                            <span>Cybersecurity Courses</span>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">🏆</span>
+                            <span>Progress Tracking</span>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">🛡️</span>
+                            <span>Security Badges</span>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">🔐</span>
+                            <span>Learning Resources</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="https://cybersafe.auralenx.com/dashboard" class="submit-btn">
+                        Go to Dashboard
+                    </a>
+                    <a href="https://cybersafe.auralenx.com/learn" class="secondary-btn">
+                        Start Learning
+                    </a>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="verification-state" style="display: none;">
+                <div class="state-icon error">❌</div>
+                <h2>Verification Failed</h2>
+                <p id="errorMessage">There was an issue verifying your email address.</p>
+
+                <div class="troubleshoot-section">
+                    <h4>What you can do:</h4>
+                    <ul>
+                        <li>Request a new verification email</li>
+                        <li>Check if the link has expired</li>
+                        <li>Contact support if the issue persists</li>
+                    </ul>
+                </div>
+
+                <div class="action-buttons">
+                    <button onclick="requestNewVerification()" class="submit-btn" id="resendBtn">
+                        Send New Verification Email
+                    </button>
+                    <a href="mailto:support@cybersafe.auralenx.com" class="secondary-btn">
+                        Contact Support
+                    </a>
+                </div>
+            </div>
+
+            <!-- Already Verified State -->
+            <div id="alreadyVerifiedState" class="verification-state" style="display: none;">
+                <div class="state-icon info">ℹ️</div>
+                <h2>Email Already Verified</h2>
+                <p>Your email address has already been confirmed.</p>
+
+                <div class="action-buttons">
+                    <a href="https://cybersafe.auralenx.com/#dashboard" class="submit-btn">
+                        Go to Dashboard
+                    </a>
+                    <a href="https://cybersafe.auralenx.com/" class="secondary-btn">
+                        Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+            <p>&copy; 2025 CyberSafe. All rights reserved.</p>
+            <p>Enterprise Cybersecurity Education Platform</p>
+        </div>
+    </div>
+
+    <script src="../scripts/firebase-config.js"></script>
+    <script src="verify.js"></script>
+</body>
+
+</html>

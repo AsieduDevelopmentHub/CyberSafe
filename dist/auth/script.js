@@ -167,11 +167,11 @@ resetForm.addEventListener('submit', async function(e) {
         // Save the new password
         await firebase.auth().confirmPasswordReset(oobCode, newPassword);
         
-        showMessage('✅ Password reset successfully! Redirecting to login...', 'success');
+        showMessage('✅ Password reset successfully! Redirecting...', 'success');
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
-            window.location.href = 'https://cybersafe.auralenx.com';
+            window.location.href = 'https://cybersafe.auralenx.com/auth.success.html';
         }, 3000);
         
     } catch (error) {

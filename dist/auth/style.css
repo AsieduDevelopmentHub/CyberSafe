@@ -109,6 +109,7 @@ body {
     font-size: 16px;
     transition: all 0.3s ease;
     background: transparent;
+    color: white
 }
 
 .password-input-container input:focus {
@@ -319,6 +320,178 @@ body {
     margin-bottom: 4px;
 }
 
+/* Verification Specific Styles */
+.verification-state {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.state-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+}
+
+.state-icon.success {
+    color: #38a169;
+}
+
+.state-icon.error {
+    color: #e53e3e;
+}
+
+.state-icon.info {
+    color: #3182ce;
+}
+
+.state-icon.loading {
+    color: #d69e2e;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #3182ce;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.benefits-section {
+    background: #181a1b;
+    border: 1px solid #1f2325;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 30px 0;
+}
+
+.benefits-section h4 {
+    color: #2d3748;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.benefit-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    background: #292a2b;
+    border: 1px solid #0f0f0f;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.benefit-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.benefit-icon {
+    font-size: 24px;
+}
+
+.benefit-item span:last-child {
+    font-size: 14px;
+    color: white;
+    font-weight: 500;
+    text-align: center;
+}
+
+.troubleshoot-section {
+    background: #181a1b;
+    border: 1px solid #232525;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 24px 0;
+    text-align: left;
+}
+
+.troubleshoot-section h4 {
+    color: #d13232;
+    margin-bottom: 12px;
+}
+
+.troubleshoot-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.troubleshoot-section li {
+    padding: 8px 0;
+    color: #80470e;
+    position: relative;
+    padding-left: 24px;
+}
+
+.troubleshoot-section li:before {
+    content: "•";
+    color: #e53e3e;
+    font-weight: bold;
+    position: absolute;
+    left: 8px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.secondary-btn {
+    display: inline-block;
+    background: #1f5192;
+    color: #ffffff;
+    padding: 14px 28px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.secondary-btn:hover {
+    background: #2064bd;
+    transform: translateY(-1px);
+}
+
+
 /* Responsive Design */
 @media (max-width: 480px) {
     .auth-card {
@@ -328,4 +501,20 @@ body {
     .logo h1 {
         font-size: 28px;
     }
+
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .action-buttons .submit-btn,
+    .action-buttons .secondary-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
+    }
 }
+
