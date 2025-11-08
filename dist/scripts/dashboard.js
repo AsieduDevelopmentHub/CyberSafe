@@ -1,16 +1,15 @@
 class DashboardManager {
     constructor() {
         this.currentSection = 'dashboard';
-        this.themeToggleInitialized = false; // Prevent multiple initializations
+        this.themeToggleInitialized = false;
         this.init();
     }
 
     async init() {
         this.setupNavigation();
-        this.setupThemeToggle(); // Setup theme FIRST
+        this.setupThemeToggle();
         this.setupEventListeners();
         
-        // Set up Firebase Auth state listener
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 console.log('👤 User authenticated, loading data...');
@@ -22,7 +21,6 @@ class DashboardManager {
             }
         });
         
-        // Wait for navigation manager to be ready
         setTimeout(() => {
             if (window.navigationManager) {
                 console.log('✅ Navigation manager integrated');
@@ -31,7 +29,6 @@ class DashboardManager {
     }
 
     setupEventListeners() {
-        // "See All" link
         const seeAllLink = document.querySelector('.see-all');
         if (seeAllLink) {
             seeAllLink.addEventListener('click', (e) => {
@@ -79,7 +76,6 @@ class DashboardManager {
             targetSection.classList.add('active');
             await this.loadSectionContent(sectionName);
             
-            // Force reload profile data when switching to profile section
             if (sectionName === 'profile' && window.profileManager) {
                 await window.profileManager.loadUserProfile();
             }
@@ -163,95 +159,267 @@ class DashboardManager {
     }
 
     async updateProgressUI(userData) {
-        console.log('📈 Updating progress UI with user data:', userData);
-        
-        const progress = userData.progress || {};
-        const modulesProgress = await this.getModulesProgress(userData.uid);
-        const scores = await this.calculateAverageScore(userData.uid);
-        
+    console.log('📈 Updating progress UI with user data:', userData);
+    
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    try {
+        // Get comprehensive progress data
+        const [modulesProgress, quizResults, caseStudyResults, badges, streakData] = await Promise.all([
+            this.getModulesProgress(user.uid),
+            this.getQuizResults(user.uid),
+            this.getCaseStudyResults(user.uid),
+            this.getUserBadges(user.uid),
+            this.getUserStreak(user.uid) // Get streak data
+        ]);
+
+        // Calculate accurate statistics
+        const stats = await this.calculateComprehensiveStats(
+            modulesProgress, 
+            quizResults, 
+            caseStudyResults, 
+            badges,
+            streakData // Pass streak data
+        );
+
+        console.log('📊 Calculated comprehensive stats:', stats);
+
         // Update progress circle
-        const progressCircle = document.querySelector('.circle-progress');
-        if (progressCircle) {
-            progressCircle.style.setProperty('--progress', `${scores.averagePercentage}%`);
-            const percentage = document.querySelector('.percentage');
-            if (percentage) {
-                percentage.textContent = `${scores.averagePercentage}%`;
-            }
-        }
+        this.updateProgressCircle(stats.overallProgress);
 
         // Update stats cards
-        const statCards = document.querySelectorAll('.stat-card');
-        if (statCards.length >= 3) {
-            const streak = progress.currentStreak || 0;
-            statCards[0].querySelector('.value').textContent = streak;
-            
-            const badgeCount = progress.completedModules ? progress.completedModules.length : 0;
-            statCards[1].querySelector('.value').textContent = badgeCount;
-            
-            statCards[2].querySelector('.value').textContent = `${scores.averageScore}%`;
-        }
+        this.updateStatsCards(stats);
 
         // Update profile stats
-        const profileStats = document.querySelectorAll('.stat-item');
-        if (profileStats.length >= 3) {
-            if (progress.overall !== undefined) {
-                profileStats[0].querySelector('.stat-value').textContent = `${scores.averagePercentage}%`;
-            }
-            if (progress.currentStreak !== undefined) {
-                profileStats[1].querySelector('.stat-value').textContent = progress.currentStreak;
-            }
-            if (progress.completedModules) {
-                profileStats[2].querySelector('.stat-value').textContent = `${progress.completedModules.length}/6`;
-            }
-        }
+        this.updateProfileStats(stats);
 
-        this.updateContinueLearningSection(userData.uid, modulesProgress);
+        // Update continue learning section
+        this.updateContinueLearningSection(user.uid, modulesProgress);
+
+        // Update level and badges
+        this.updateUserLevel(stats);
+        this.updateBadgeCount(stats.badgesEarned);
+
+    } catch (error) {
+        console.error('❌ Error in updateProgressUI:', error);
     }
+}
+
+// ADD THIS NEW METHOD to get streak data
+async getUserStreak(uid) {
+    try {
+        if (!window.firestoreService) return { currentStreak: 1, longestStreak: 1 }; // Default to 1
+        
+        // Try to get streak from user profile
+        const userDoc = await firebase.firestore()
+            .collection('users')
+            .doc(uid)
+            .get();
+            
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            return {
+                currentStreak: userData.currentStreak || 1,
+                longestStreak: userData.longestStreak || 1,
+                lastLogin: userData.lastLogin
+            };
+        }
+        
+        return { currentStreak: 1, longestStreak: 1 }; // Default to 1 if no data
+    } catch (error) {
+        console.error('Error getting user streak:', error);
+        return { currentStreak: 1, longestStreak: 1 }; // Default to 1 on error
+    }
+}
+
 
     async getModulesProgress(uid) {
         try {
             if (!window.firestoreService) return [];
             
-            const modulesSnapshot = await window.firestoreService
+            const modulesSnapshot = await firebase.firestore()
                 .collection('user_progress')
                 .doc(uid)
                 .collection('modules')
                 .get();
             
-            return modulesSnapshot.docs.map(doc => doc.data());
+            return modulesSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
         } catch (error) {
             console.error('Error getting modules progress:', error);
             return [];
         }
     }
 
-    async calculateAverageScore(uid) {
+    async getQuizResults(uid) {
         try {
-            if (!window.firestoreService) return { averagePercentage: 0, averageScore: 0 };
+            const quizResults = await firebase.firestore()
+                .collection('quizResults')
+                .where('userId', '==', uid)
+                .get();
             
-            const modulesProgress = await this.getModulesProgress(uid);
-            if (modulesProgress.length === 0) return { averagePercentage: 0, averageScore: 0 };
-            
-            const completedModules = modulesProgress.filter(module => module.completed);
-            if (completedModules.length === 0) return { averagePercentage: 0, averageScore: 0 };
-            
-            const totalScore = completedModules.reduce((sum, module) => {
-                const score = Number(module.score) || 0;
-                return sum + score;
-            }, 0);
-            
-            const averageScore = Math.round(totalScore / completedModules.length);
-            const averagePercentage = Math.round((completedModules.length / 6) * 100);
-            
-            return {
-                averagePercentage: averagePercentage,
-                averageScore: averageScore
-            }; 
-            
+            return quizResults.docs.map(doc => doc.data());
         } catch (error) {
-            console.error('Error calculating average score:', error);
-            return { averagePercentage: 0, averageScore: 0 };
+            console.error('Error getting quiz results:', error);
+            return [];
         }
+    }
+
+    async getCaseStudyResults(uid) {
+        try {
+            const caseStudyResults = await firebase.firestore()
+                .collection('caseStudyQuizzes')
+                .where('userId', '==', uid)
+                .get();
+            
+            return caseStudyResults.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error getting case study results:', error);
+            return [];
+        }
+    }
+
+    async getUserBadges(uid) {
+        try {
+            const badgesSnapshot = await firebase.firestore()
+                .collection('user_badges')
+                .doc(uid)
+                .collection('badges')
+                .get();
+            
+            return badgesSnapshot.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error getting user badges:', error);
+            return [];
+        }
+    }
+
+    async calculateComprehensiveStats(modulesProgress, quizResults, caseStudyResults, badges, streakData = {}) {
+    // Calculate module completion
+    const completedModules = modulesProgress.filter(module => module.completed);
+    const moduleCompletionRate = modulesProgress.length > 0 ? 
+        (completedModules.length / 6) * 100 : 0;
+
+    // Calculate average quiz score
+    const allScores = [
+        ...quizResults.map(quiz => quiz.score || 0),
+        ...caseStudyResults.map(caseStudy => caseStudy.score || 0)
+    ];
+    const averageScore = allScores.length > 0 ? 
+        Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
+
+    // Calculate overall progress (weighted average)
+    const moduleWeight = 0.4;
+    const quizWeight = 0.4;  
+    const badgeWeight = 0.2;
+
+    const moduleProgress = moduleCompletionRate;
+    const quizProgress = averageScore;
+    const badgeProgress = Math.min((badges.length / 6) * 100, 100);
+
+    const overallProgress = Math.round(
+        (moduleProgress * moduleWeight) +
+        (quizProgress * quizWeight) +
+        (badgeProgress * badgeWeight)
+    );
+
+    // Use actual streak data or default to 1
+    const currentStreak = streakData.currentStreak || 1;
+
+    return {
+        overallProgress: overallProgress,
+        averageScore: averageScore,
+        completedModules: completedModules.length,
+        totalModules: 6,
+        badgesEarned: badges.length,
+        totalBadges: 6,
+        currentStreak: currentStreak,
+        longestStreak: streakData.longestStreak || 1,
+        totalQuizzes: quizResults.length + caseStudyResults.length,
+        moduleCompletionRate: Math.round(moduleCompletionRate)
+    };
+}
+
+    updateProgressCircle(progress) {
+        const progressCircle = document.querySelector('.circle-progress');
+        if (progressCircle) {
+            progressCircle.style.setProperty('--progress', `${progress}%`);
+            const percentage = document.querySelector('.percentage');
+            if (percentage) {
+                percentage.textContent = `${progress}%`;
+            }
+        }
+    }
+
+    updateStatsCards(stats) {
+        const statCards = document.querySelectorAll('.stat-card');
+        
+        if (statCards.length >= 3) {
+            // Streak card
+            statCards[0].querySelector('.value').textContent = stats.currentStreak;
+            statCards[0].querySelector('.label').textContent = 'Day Streak';
+            
+            // Badges card
+            statCards[1].querySelector('.value').textContent = stats.badgesEarned;
+            statCards[1].querySelector('.label').textContent = 'Badges Earned';
+            
+            // Average score card
+            statCards[2].querySelector('.value').textContent = `${stats.averageScore}%`;
+            statCards[2].querySelector('.label').textContent = 'Avg Score';
+        }
+    }
+
+    updateProfileStats(stats) {
+        const profileStats = document.querySelectorAll('.stat-item');
+        if (profileStats.length >= 3) {
+            // Overall progress
+            profileStats[0].querySelector('.stat-value').textContent = `${stats.overallProgress}%`;
+            profileStats[0].querySelector('.stat-label').textContent = 'Overall Progress';
+            
+            // Current streak
+            profileStats[1].querySelector('.stat-value').textContent = stats.currentStreak;
+            profileStats[1].querySelector('.stat-label').textContent = 'Day Streak';
+            
+            // Completed modules
+            profileStats[2].querySelector('.stat-value').textContent = `${stats.completedModules}/${stats.totalModules}`;
+            profileStats[2].querySelector('.stat-label').textContent = 'Modules Completed';
+        }
+    }
+
+    updateUserLevel(stats) {
+        let level = 1;
+        let title = 'Cyber Rookie';
+
+        if (stats.overallProgress >= 80) {
+            level = 4;
+            title = 'Cyber Master';
+        } else if (stats.overallProgress >= 60) {
+            level = 3;
+            title = 'Cyber Expert';
+        } else if (stats.overallProgress >= 30) {
+            level = 2;
+            title = 'Cyber Apprentice';
+        }
+
+        const levelBadge = document.querySelector('.level-badge');
+        const levelTitle = document.querySelector('.level-title');
+        
+        if (levelBadge && levelTitle) {
+            levelBadge.textContent = `Level ${level}`;
+            levelTitle.textContent = title;
+        }
+    }
+
+    updateBadgeCount(badgeCount) {
+        const badgeElements = document.querySelectorAll('.badge-count, .badge-value');
+        badgeElements.forEach(element => {
+            if (element.classList.contains('badge-count') || element.classList.contains('badge-value')) {
+                element.textContent = badgeCount;
+            }
+        });
     }
 
     async updateContinueLearningSection(uid, modulesProgress) {
@@ -284,27 +452,45 @@ class DashboardManager {
                 
                 if (moduleInfo) {
                     const title = moduleInfo.querySelector('h4');
-                    if (title) title.textContent = this.getModuleTitle(continueModule.moduleId);
+                    if (title) title.textContent = this.getModuleTitle(continueModule.moduleId || continueModule.id);
                 }
                 
                 if (progressBar) {
-                    progressBar.style.width = `${continueModule.progress}%`;
+                    progressBar.style.width = `${continueModule.progress || 0}%`;
                 }
                 
                 if (progressText) {
-                    progressText.textContent = `${continueModule.progress}% complete`;
+                    progressText.textContent = `${continueModule.progress || 0}% complete`;
                 }
                 
                 const continueBtn = continueLearningCard.querySelector('.btn-continue');
                 if (continueBtn) {
-                    continueBtn.setAttribute('data-module', continueModule.moduleId);
+                    continueBtn.setAttribute('data-module', continueModule.moduleId || continueModule.id);
                     continueBtn.onclick = () => {
                         if (window.moduleContentManager) {
-                            window.moduleContentManager.openModule(continueModule.moduleId);
+                            window.moduleContentManager.openModule(continueModule.moduleId || continueModule.id);
                         }
                     };
                 }
             } else {
+                // If no modules in progress, suggest starting the first one
+                const moduleInfo = continueLearningCard.querySelector('.module-info');
+                const progressBar = continueLearningCard.querySelector('.progress-fill');
+                const progressText = continueLearningCard.querySelector('.module-progress span');
+                
+                if (moduleInfo) {
+                    const title = moduleInfo.querySelector('h4');
+                    if (title) title.textContent = 'Phishing Awareness';
+                }
+                
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+                
+                if (progressText) {
+                    progressText.textContent = 'Start learning';
+                }
+                
                 const continueBtn = continueLearningCard.querySelector('.btn-continue');
                 if (continueBtn) {
                     continueBtn.onclick = () => {
@@ -333,7 +519,6 @@ class DashboardManager {
     }
 
     setupThemeToggle() {
-        // Prevent multiple initializations
         if (this.themeToggleInitialized) {
             console.log('🎨 Theme toggle already initialized');
             return;
@@ -347,21 +532,17 @@ class DashboardManager {
 
         console.log('🎨 Initializing theme toggle...');
 
-        // Remove any existing event listeners
         const newToggle = themeToggle.cloneNode(true);
         themeToggle.parentNode.replaceChild(newToggle, themeToggle);
 
-        // Get initial theme
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const savedTheme = localStorage.getItem('cybersafe-theme');
         const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
 
         console.log('📋 Initial theme:', { savedTheme, prefersDark, initialTheme });
 
-        // Apply initial theme
         this.applyTheme(initialTheme);
 
-        // Add SINGLE event listener
         newToggle.addEventListener('click', () => {
             console.log('🎯 Theme toggle clicked');
             const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
@@ -379,10 +560,8 @@ class DashboardManager {
     applyTheme(theme) {
         console.log('🎯 Applying theme:', theme);
         
-        // Remove any existing theme attributes
         document.documentElement.removeAttribute('data-theme');
         
-        // Apply new theme
         setTimeout(() => {
             document.documentElement.setAttribute('data-theme', theme);
             this.updateThemeIcon(theme);
@@ -420,17 +599,14 @@ class DashboardManager {
         }
 
         try {
-            // Load badges if modules manager is available
             if (window.modulesManager) {
                 await window.modulesManager.loadBadges();
             }
 
-            // Load profile data if profile manager is available
             if (window.profileManager) {
                 await window.profileManager.loadUserProfile();
             }
 
-            // Update dashboard data
             if (window.firestoreService) {
                 await this.loadUserProgress();
             }

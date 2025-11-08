@@ -6,7 +6,7 @@ class ModulesManager {
                 title: 'Phishing Awareness',
                 description: 'Learn to identify and avoid email scams and phishing attempts',
                 icon: 'fas fa-fish',
-                progress: 0, // Will be updated from Firestore
+                progress: 0,
                 duration: '30 min',
                 lessons: 5,
                 category: 'Foundation',
@@ -17,7 +17,7 @@ class ModulesManager {
                 title: 'Password Security',
                 description: 'Create strong passwords and manage them securely',
                 icon: 'fas fa-key',
-                progress: 0, // Will be updated from Firestore
+                progress: 0,
                 duration: '25 min',
                 lessons: 4,
                 category: 'Foundation',
@@ -28,7 +28,7 @@ class ModulesManager {
                 title: 'Social Engineering',
                 description: 'Recognize and defend against manipulation tactics',
                 icon: 'fas fa-users',
-                progress: 0, // Will be updated from Firestore
+                progress: 0,
                 duration: '35 min',
                 lessons: 6,
                 category: 'Intermediate',
@@ -39,7 +39,7 @@ class ModulesManager {
                 title: 'Network Security',
                 description: 'Safe browsing practices and VPN usage',
                 icon: 'fas fa-wifi',
-                progress: 0, // Will be updated from Firestore
+                progress: 0,
                 duration: '40 min',
                 lessons: 5,
                 category: 'Intermediate',
@@ -50,7 +50,7 @@ class ModulesManager {
                 title: 'Data Protection',
                 description: 'Secure your personal information online',
                 icon: 'fas fa-database',
-                progress: 0, // Will be updated from Firestore
+                progress: 0,
                 duration: '45 min',
                 lessons: 6,
                 category: 'Advanced',
@@ -61,7 +61,7 @@ class ModulesManager {
                 title: 'Mobile Security',
                 description: 'App permissions and device safety',
                 icon: 'fas fa-mobile-alt',
-                progress: 0, // Will be updated from Firestore
+                progress: 0,
                 duration: '30 min',
                 lessons: 4,
                 category: 'Advanced',
@@ -100,44 +100,122 @@ class ModulesManager {
             {
                 id: 'quick_learner',
                 name: 'Quick Learner',
-                description: 'Complete a module in one sitting',
+                description: 'Complete a module in under 24 hours',
                 icon: 'fas fa-bolt',
-                earned: false
+                earned: false,
+                criteria: 'complete_module_fast'
             },
             {
                 id: 'phishing_expert',
                 name: 'Phishing Expert',
                 description: 'Score 100% on Phishing Awareness quiz',
                 icon: 'fas fa-fish',
-                earned: false
+                earned: false,
+                criteria: 'perfect_quiz_score'
             },
             {
                 id: 'streak_starter',
                 name: 'Streak Starter',
                 description: 'Maintain a 3-day learning streak',
                 icon: 'fas fa-fire',
-                earned: false
+                earned: false,
+                criteria: 'learning_streak'
             },
             {
-                id: 'password_master',
+                id: 'passwords_expert',
                 name: 'Password Master',
                 description: 'Complete Password Security module',
                 icon: 'fas fa-key',
-                earned: false
+                earned: false,
+                criteria: 'module_completion'
             },
             {
                 id: 'case_analyst',
                 name: 'Case Analyst',
                 description: 'Complete 3 case studies',
                 icon: 'fas fa-briefcase',
-                earned: false
+                earned: false,
+                criteria: 'case_study_completion'
             },
             {
                 id: 'security_pro',
                 name: 'Security Pro',
                 description: 'Complete all foundation modules',
                 icon: 'fas fa-shield-alt',
-                earned: false
+                earned: false,
+                criteria: 'foundation_completion'
+            },
+            {
+                id: 'social_expert',
+                name: 'Social Engineering Expert',
+                description: 'Complete Social Engineering module',
+                icon: 'fas fa-users',
+                earned: false,
+                criteria: 'module_completion'
+            },
+            {
+                id: 'network_expert',
+                name: 'Network Guardian',
+                description: 'Complete Network Security module',
+                icon: 'fas fa-wifi',
+                earned: false,
+                criteria: 'module_completion'
+            },
+            {
+                id: 'data_expert',
+                name: 'Data Protection Specialist',
+                description: 'Complete Data Protection module',
+                icon: 'fas fa-database',
+                earned: false,
+                criteria: 'module_completion'
+            },
+            {
+                id: 'mobile_expert',
+                name: 'Mobile Security Defender',
+                description: 'Complete Mobile Security module',
+                icon: 'fas fa-mobile-alt',
+                earned: false,
+                criteria: 'module_completion'
+            },
+            {
+                id: 'early_bird',
+                name: 'Early Bird',
+                description: 'Complete your first module',
+                icon: 'fas fa-feather',
+                earned: false,
+                criteria: 'first_module'
+            },
+            {
+                id: 'quiz_champion',
+                name: 'Quiz Champion',
+                description: 'Score 90% or higher on 5 quizzes',
+                icon: 'fas fa-trophy',
+                earned: false,
+                criteria: 'quiz_master'
+            },
+            {
+                id: 'dedicated_learner',
+                name: 'Dedicated Learner',
+                description: 'Complete 10 learning sessions',
+                icon: 'fas fa-graduation-cap',
+                earned: false,
+                criteria: 'learning_sessions'
+            },
+            {
+                id: 'speed_racer',
+                name: 'Speed Racer',
+                description: 'Complete a quiz in under 2 minutes',
+                icon: 'fas fa-stopwatch',
+                earned: false,
+                criteria: 'fast_quiz'
+            },
+            {
+                id: 'perfectionist',
+                name: 'Perfectionist',
+                description: 'Get perfect scores on 3 different modules',
+                icon: 'fas fa-star',
+                earned: false,
+                criteria: 'multiple_perfect_scores'
             }
         ];
     }
@@ -147,12 +225,10 @@ class ModulesManager {
         if (!modulesList) return;
 
         try {
-            // Get real progress data from Firestore
             await this.updateModulesWithRealProgress();
             
             modulesList.innerHTML = this.modules.map(module => this.createModuleElement(module)).join('');
 
-            // Add click events to module cards
             modulesList.querySelectorAll('.module-card').forEach((card, index) => {
                 const moduleId = this.modules[index].id;
                 const continueBtn = card.querySelector('.btn-continue');
@@ -169,7 +245,6 @@ class ModulesManager {
             console.log('✅ Modules loaded with real progress data');
         } catch (error) {
             console.error('❌ Error loading modules:', error);
-            // Fallback to static data if Firestore fails
             modulesList.innerHTML = this.modules.map(module => this.createModuleElement(module)).join('');
         }
     }
@@ -184,10 +259,8 @@ class ModulesManager {
         try {
             console.log('📊 Fetching real module progress from Firestore...');
             
-            // Get all module progress from Firestore
             const modulesProgress = await this.getUserModulesProgress(user.uid);
             
-            // Update each module with real progress
             this.modules.forEach(module => {
                 const moduleProgress = modulesProgress.find(mp => mp.moduleId === module.id);
                 if (moduleProgress) {
@@ -203,7 +276,6 @@ class ModulesManager {
                 }
             });
 
-            // Update badges based on real progress
             await this.updateBadgesWithRealProgress(user.uid);
 
         } catch (error) {
@@ -242,7 +314,10 @@ class ModulesManager {
         try {
             const userBadges = await window.firestoreService.getUserBadges(uid);
             
-            // Update badge earned status based on Firestore data
+            // Check for new badges based on user activity
+            await this.checkAndAwardBadges(uid);
+            
+            // Update badge earned status
             this.badges.forEach(badge => {
                 const userHasBadge = userBadges.some(userBadge => userBadge.id === badge.id);
                 badge.earned = userHasBadge;
@@ -253,23 +328,227 @@ class ModulesManager {
             console.error('Error updating badges:', error);
         }
     }
-    
-    // Add this method to your ModulesManager class in modules.js
-setupFeaturedModulesEvents() {
-    const featuredModulesGrid = document.querySelector('.modules-grid');
-    if (!featuredModulesGrid) return;
 
-    featuredModulesGrid.addEventListener('click', (e) => {
-        const moduleItem = e.target.closest('.module-item');
-        if (moduleItem && window.moduleContentManager) {
-            const moduleId = moduleItem.getAttribute('data-module');
-            console.log('🎯 Featured module clicked:', moduleId);
-            window.moduleContentManager.openModule(moduleId);
+    // Check and award badges based on user activity
+    async checkAndAwardBadges(uid) {
+        try {
+            console.log('🎯 Checking for new badges...');
+            
+            const [
+                modulesProgress, 
+                quizResults, 
+                caseStudyResults, 
+                learningSessions,
+                userProfile
+            ] = await Promise.all([
+                this.getUserModulesProgress(uid),
+                this.getQuizResults(uid),
+                this.getCaseStudyResults(uid),
+                this.getLearningSessions(uid),
+                window.firestoreService.getUserProfile(uid)
+            ]);
+
+            const badgesToAward = [];
+
+            // Check each badge criteria
+            for (const badge of this.badges) {
+                if (!badge.earned) {
+                    const shouldAward = await this.checkBadgeCriteria(badge, {
+                        modulesProgress,
+                        quizResults,
+                        caseStudyResults,
+                        learningSessions,
+                        userProfile
+                    });
+                    
+                    if (shouldAward) {
+                        badgesToAward.push(badge);
+                    }
+                }
+            }
+
+            // Award new badges
+            for (const badge of badgesToAward) {
+                await this.awardBadge(uid, badge);
+                console.log(`🎉 Awarded badge: ${badge.name}`);
+            }
+
+        } catch (error) {
+            console.error('Error checking badges:', error);
         }
-    });
+    }
+
+    // Check specific badge criteria
+    async checkBadgeCriteria(badge, userData) {
+        const { modulesProgress, quizResults, caseStudyResults, learningSessions, userProfile } = userData;
+
+        switch (badge.criteria) {
+            case 'first_module':
+                return modulesProgress.some(module => module.completed);
+
+            case 'module_completion':
+                const targetModule = badge.id.replace('_expert', '').replace('_defender', '').replace('_specialist', '');
+                return modulesProgress.some(module => 
+                    module.moduleId === targetModule && module.completed
+                );
+
+            case 'perfect_quiz_score':
+                return quizResults.some(quiz => 
+                    quiz.moduleId === 'phishing' && quiz.score === 100
+                );
+
+            case 'complete_module_fast':
+                // Check if any module was completed in under 24 hours
+                const fastCompletions = modulesProgress.filter(module => {
+                    if (!module.completed || !module.lastUpdated) return false;
+                    const startTime = module.lastUpdated.toDate();
+                    const endTime = new Date();
+                    const hoursDiff = (endTime - startTime) / (1000 * 60 * 60);
+                    return hoursDiff <= 24;
+                });
+                return fastCompletions.length > 0;
+
+            case 'learning_streak':
+                return (userProfile?.currentStreak || 0) >= 3;
+
+            case 'case_study_completion':
+                return caseStudyResults.length >= 3;
+
+            case 'foundation_completion':
+                const foundationModules = ['phishing', 'passwords'];
+                return foundationModules.every(moduleId =>
+                    modulesProgress.some(module => module.moduleId === moduleId && module.completed)
+                );
+
+            case 'quiz_master':
+                const highScoreQuizzes = quizResults.filter(quiz => quiz.score >= 90);
+                return highScoreQuizzes.length >= 5;
+
+            case 'learning_sessions':
+                return learningSessions.length >= 10;
+
+            case 'fast_quiz':
+                return quizResults.some(quiz => 
+                    quiz.completionTime && quiz.completionTime <= 120 // 2 minutes in seconds
+                );
+
+            case 'multiple_perfect_scores':
+                const perfectModules = new Set(
+                    quizResults
+                        .filter(quiz => quiz.score === 100)
+                        .map(quiz => quiz.moduleId)
+                );
+                return perfectModules.size >= 3;
+
+            default:
+                return false;
+        }
+    }
+
+    // Award badge to user
+    async awardBadge(uid, badge) {
+        try {
+            const badgeData = {
+                id: badge.id,
+                name: badge.name,
+                description: badge.description,
+                icon: badge.icon,
+                earnedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                moduleId: this.getModuleIdFromBadge(badge.id)
+            };
+
+            await firebase.firestore()
+                .collection('user_badges')
+                .doc(uid)
+                .collection('badges')
+                .doc(badge.id)
+                .set(badgeData);
+
+            // Update local badge status
+            badge.earned = true;
+
+            console.log(`✅ Badge awarded: ${badge.name}`);
+
+        } catch (error) {
+            console.error('Error awarding badge:', error);
+        }
+    }
+
+    // Get module ID from badge ID
+    getModuleIdFromBadge(badgeId) {
+        const moduleMap = {
+            'phishing_expert': 'phishing',
+            'passwords_expert': 'passwords',
+            'social_expert': 'social',
+            'network_expert': 'network',
+            'data_expert': 'data',
+            'mobile_expert': 'mobile'
+        };
+        return moduleMap[badgeId] || null;
+    }
+
+    // Get quiz results
+    async getQuizResults(uid) {
+        try {
+            const quizResults = await firebase.firestore()
+                .collection('quizResults')
+                .where('userId', '==', uid)
+                .get();
+            
+            return quizResults.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error getting quiz results:', error);
+            return [];
+        }
+    }
+
+    // Get case study results
+    async getCaseStudyResults(uid) {
+        try {
+            const caseStudyResults = await firebase.firestore()
+                .collection('caseStudyQuizzes')
+                .where('userId', '==', uid)
+                .get();
+            
+            return caseStudyResults.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error getting case study results:', error);
+            return [];
+        }
+    }
+
+    // Get learning sessions
+    async getLearningSessions(uid) {
+        try {
+            const learningSessions = await firebase.firestore()
+                .collection('user_activities')
+                .doc(uid)
+                .collection('activities')
+                .where('type', 'in', ['video_watch', 'quiz_complete', 'module_start'])
+                .get();
+            
+            return learningSessions.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error getting learning sessions:', error);
+            return [];
+        }
+    }
     
-    console.log('✅ Featured modules events setup');
-}
+    setupFeaturedModulesEvents() {
+        const featuredModulesGrid = document.querySelector('.modules-grid');
+        if (!featuredModulesGrid) return;
+
+        featuredModulesGrid.addEventListener('click', (e) => {
+            const moduleItem = e.target.closest('.module-item');
+            if (moduleItem && window.moduleContentManager) {
+                const moduleId = moduleItem.getAttribute('data-module');
+                console.log('🎯 Featured module clicked:', moduleId);
+                window.moduleContentManager.openModule(moduleId);
+            }
+        });
+        
+        console.log('✅ Featured modules events setup');
+    }
 
     createModuleElement(module) {
         const isActive = module.progress > 0;
@@ -305,37 +584,6 @@ setupFeaturedModulesEvents() {
         `;
     }
 
-    // loadCaseStudies() {
-    //     const caseStudiesList = document.getElementById('caseStudiesList');
-    //     if (!caseStudiesList) return;
-
-    //     caseStudiesList.innerHTML = this.caseStudies.map(study => this.createCaseStudyElement(study)).join('');
-    // }
-
-    // createCaseStudyElement(study) {
-    //     return `
-    //         <div class="section-card case-study-card">
-    //             <div class="case-study-header">
-    //                 <div class="case-study-icon">
-    //                     <i class="${study.icon}"></i>
-    //                 </div>
-    //                 <div>
-    //                     <h4>${study.title}</h4>
-    //                     <p>${study.description}</p>
-    //                 </div>
-    //             </div>
-    //             <div class="case-study-meta">
-    //                 <span><i class="fas fa-clock"></i> ${study.duration}</span>
-    //                 <span><i class="fas fa-graduation-cap"></i> ${study.lessons}</span>
-    //             </div>
-    //             <button class="btn-primary">
-    //                 <span>Start Case Study</span>
-    //                 <i class="fas fa-arrow-right"></i>
-    //             </button>
-    //         </div>
-    //     `;
-    // }
-
     loadBadges() {
         const badgesGrid = document.getElementById('badgesGrid');
         if (!badgesGrid) return;
@@ -369,12 +617,10 @@ setupFeaturedModulesEvents() {
         ).toString(16).slice(1);
     }
 
-    // Method to refresh modules with latest progress
     async refreshModules() {
         console.log('🔄 Refreshing modules with latest progress...');
         await this.updateModulesWithRealProgress();
         
-        // Update the modules list if it's currently visible
         const modulesList = document.getElementById('modulesList');
         if (modulesList && modulesList.innerHTML) {
             modulesList.innerHTML = this.modules.map(module => this.createModuleElement(module)).join('');

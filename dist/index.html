@@ -13,7 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="shortcut icon" href="assets/icons/logo.svg" type="image/x-icon">
-    
 </head>
 <body>
     <!-- Loading Animation -->
@@ -73,9 +72,8 @@
                     Don't have an account? <a href="#" id="showSignup">Sign Up</a>
                 </p>
                 <a href="#" class="forgot-password" id="forgotPassword">Forgot Password?</a>
-                
-
             </div>
+
             <!-- Email Verification Banner -->
             <div id="emailVerificationBanner" class="verification-banner" style="display: none;">
                 <div class="banner-content">
@@ -507,6 +505,7 @@
     <!-- App Scripts -->
     <script src="scripts/firebase-config.js"></script>
     <script src="scripts/firestore-service.js"></script>
+    
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const loadingScreen = document.getElementById('loadingScreen');
@@ -530,16 +529,15 @@
             progressFill.style.width = `${progress}%`;
         }, 200);
 
+        // Check auth state after loading
         setTimeout(() => {
             firebase.auth().onAuthStateChanged(user => {
-  loadingScreen.classList.add('hidden');
-  setTimeout(() => {
-    loadingScreen.style.display = 'none';
-  }, 500);
-            }
-        }, 200);
+                // Auth state handled by auth.js
+            });
+        }, 1000);
     });
     </script>
+    
     <script src="scripts/auth.js"></script>
     <script src="scripts/dashboard.js"></script>
     <script src="scripts/modules.js"></script>
@@ -548,15 +546,85 @@
     <script src="scripts/module-content.js"></script>
     <script src="scripts/casestudy.js"></script>
     <script src="scripts/navigation-manager.js"></script>
+    <script src="scripts/notification.js"></script>
     <script src="scripts/app-enhancements.js"></script>
     <script src="scripts/profile-manager.js"></script>
     <script src="scripts/app.js"></script>
     
-      <!-- Register service worker -->
-  <script>
-    //if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js').catch(()=>{ /* ignore */ });
-    //}
-  </script>
+    <!-- Register service worker -->
+<script>
+// Enhanced Service Worker Registration with Update Handling
+if ('serviceWorker' in navigator) {
+  // Register Service Worker
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(registration => {
+      console.log('✅ Service Worker registered:', registration);
+      
+      // Check for updates every time the page loads
+      registration.update();
+      
+      // Listen for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        console.log('🔄 New service worker found...');
+        
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('🆕 New version available!');
+            
+            // Show update notification to user
+            if (confirm('A new version of CyberSafe is available! Reload to update?')) {
+              // Send message to service worker to skip waiting
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              
+              // Reload the page
+              window.location.reload();
+            }
+          }
+        });
+      });
+    })
+    .catch(error => {
+      console.log('❌ Service Worker registration failed:', error);
+    });
+
+  // Listen for messages from service worker
+  navigator.serviceWorker.addEventListener('message', event => {
+    const { data } = event;
+    
+    if (data.type === 'FORCE_RELOAD') {
+      console.log('🔄 Service worker forcing reload...');
+      window.location.reload();
+    }
+  });
+}
+
+// Utility function to clear cache and reload
+function clearCacheAndReload() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(registration => {
+      // Send clear cache message
+      if (registration.active) {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = event => {
+          if (event.data.type === 'CACHE_CLEARED') {
+            console.log('🗑️ Cache cleared, reloading...');
+            window.location.reload();
+          }
+        };
+        registration.active.postMessage({ type: 'CLEAR_CACHE' }, [channel.port2]);
+      }
+    });
+  }
+}
+
+// Development helper - force update on Ctrl+Shift+R
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+    e.preventDefault();
+    clearCacheAndReload();
+  }
+});
+</script>
 </body>
 </html>
