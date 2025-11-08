@@ -4,7 +4,7 @@
     --accent: #00B8D9;
     --secondary: #475569;
     --highlight: #FF6F00;
-    --background: #F9FAFB;
+    --background: #f7f0f0;
     --auth-background: #0A1F44;
     --surface: #FFFFFF;
     --text-primary: #1F2937;
@@ -395,12 +395,16 @@ body {
 
 .close-modal {
     background: none;
-    border: none;
+    border: 1px solid var(--text-secondary);
+    border-radius: 50%;
     font-size: 1.5rem;
     color: var(--text-secondary);
     cursor: pointer;
     padding: var(--space-sm);
     border-radius: var(--radius-sm);
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 
 .close-modal:hover {
@@ -444,7 +448,7 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: #fff;
+    background: var(--background);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateX(120%);
@@ -467,6 +471,11 @@ body {
     font-size: 24px;
     color: #FFD700;
 }
+.badge-card{
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 8px;
+}
 
 .badge-info {
     flex-grow: 1;
@@ -474,13 +483,13 @@ body {
 
 .badge-info h4 {
     margin: 0;
-    color: #333;
+    color: var(--text-primary);
     font-size: 16px;
 }
 
 .badge-info p {
     margin: 5px 0 0;
-    color: #666;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
@@ -500,7 +509,7 @@ body {
 
 /* Case Study Styles */
 .case-study-card {
-    background: var(--card-bg);
+    background: var(--surface);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -557,8 +566,8 @@ body {
     color: white;
 }
 
-.case-impact.moderate {
-    background: #ffbb33;
+.case-impact.high {
+    background: blue;
     color: white;
 }
 
@@ -619,6 +628,9 @@ body {
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
+    .btn-secondary{
+        background: var(--background);
+    }
 }
 
 /* Case Study Modal */
@@ -659,7 +671,7 @@ body {
 }
 
 .case-study-title h2 {
-    margin: 0 0 8px 0;
+    margin: 0 0 3px 20px;
     font-size: 1.8em;
     color: white;
     font-weight: 600;

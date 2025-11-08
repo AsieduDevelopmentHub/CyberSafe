@@ -112,7 +112,7 @@
     align-items: center;
     gap: var(--space-lg);
     padding: var(--space-lg);
-    background: var(--background);
+    background: var(--surface);
     border-radius: var(--radius-md);
     border: 2px solid var(--border);
     transition: all 0.3s ease;
@@ -305,11 +305,18 @@
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-md);
     margin-bottom: var(--space-xl);
+    text-align: center;
+    .badge-item{
+        background: var(--surface);
+    }
 }
 
 .badge-item {
     text-align: center;
     padding: var(--space-md);
+    background: var(--surface);
+    border-radius: 5px;
+   
 }
 
 .badge-icon {
@@ -326,7 +333,7 @@
 }
 
 .badge-item.earned .badge-icon {
-    background: linear-gradient(135deg, var(--highlight), #FFB74D);
+    background: linear-gradient(135deg, var(--highlight), hsl(36, 100%, 65%));
     color: white;
 }
 
@@ -370,6 +377,7 @@
 /* Case Studies */
 .case-study-card {
     margin-bottom: var(--space-lg);
+    background: var(--surface);
 }
 
 .case-study-header {
