@@ -10,7 +10,6 @@ class AuthManager {
         this.currentUser = null;
         this.isInitialized = false;
         this.authStateListeners = [];
-        this.oauthInProgress = false; // 🔥 NEW: Track OAuth state
         
         // Google provider setup
         this.googleProvider = new firebase.auth.GoogleAuthProvider();
@@ -105,13 +104,6 @@ class AuthManager {
         try {
             firebase.auth().onAuthStateChanged(async (user) => {
                 console.log('🔄 Auth state changed:', user ? `User: ${user.email}` : 'No user');
-                
-                // 🔥 CRITICAL: Skip auth state changes during OAuth
-                if (this.oauthInProgress) {
-                    console.log('⏭️  Skipping auth state change - OAuth in progress');
-                    return;
-                }
-                
                 this.currentUser = user;
                 
                 if (user) {
@@ -444,9 +436,6 @@ class AuthManager {
     async handleGoogleSignIn() {
         console.log('🔐 Starting Google sign-in...');
         
-        // 🔥 CRITICAL: Set OAuth in progress flag
-        this.oauthInProgress = true;
-        
         // Disable Google buttons immediately
         this.setGoogleButtonsState(true, 'Connecting...');
 
@@ -458,6 +447,7 @@ class AuthManager {
             // Small delay to ensure user sees the message
             await new Promise(resolve => setTimeout(resolve, 300));
             
+            // 🔥 CRITICAL FIX: Use getRedirectResult to handle OAuth properly
             const result = await this.withTimeout(
                 firebase.auth().signInWithPopup(this.googleProvider),
                 45000
@@ -469,15 +459,19 @@ class AuthManager {
                 uid: user.uid,
                 email: user.email,
                 displayName: user.displayName,
-                emailVerified: user.emailVerified
+                emailVerified: user.emailVerified,
+                providerData: user.providerData
             });
 
+            // 🔥 CRITICAL: Wait for Firebase to persist the user
+            console.log('🔄 Waiting for Firebase user persistence...');
+            await this.waitForUserPersistence(user);
+            
             // Handle user profile immediately
             await this.handleOAuthUserProfile(user);
             
-            // 🔥 CRITICAL FIX: Use nuclear approach for OAuth post-processing
-            console.log('🔄 Processing OAuth post-login with NUCLEAR approach...');
-            await this.handleOAuthNuclear(user);
+            // 🔥 CRITICAL: Verify user is actually logged in with Firebase
+            await this.verifyUserLogin(user);
             
             this.showSuccess('Welcome, ' + (user.displayName || user.email) + '!');
             
@@ -485,9 +479,91 @@ class AuthManager {
             console.error('❌ Google sign in failed:', error);
             this.handleGoogleSignInError(error);
         } finally {
-            // Reset OAuth flag
-            this.oauthInProgress = false;
             this.setGoogleButtonsState(false, 'Google');
+        }
+    }
+
+    // 🔥 NEW: Wait for Firebase to persist the user properly
+    async waitForUserPersistence(user) {
+        console.log('⏳ Waiting for user persistence...');
+        
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            const checkPersistence = () => {
+                attempts++;
+                const currentUser = firebase.auth().currentUser;
+                
+                console.log(`🔍 Persistence check ${attempts}:`, {
+                    currentUser: currentUser ? currentUser.email : 'null',
+                    expectedUser: user.email,
+                    match: currentUser && currentUser.uid === user.uid
+                });
+                
+                if (currentUser && currentUser.uid === user.uid) {
+                    console.log('✅ User persistence confirmed!');
+                    resolve(currentUser);
+                    return;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    console.warn('⚠️ User persistence timeout, but continuing...');
+                    resolve(user); // Continue with original user
+                    return;
+                }
+                
+                setTimeout(checkPersistence, 500);
+            };
+            
+            checkPersistence();
+        });
+    }
+
+    // 🔥 NEW: Verify user login with multiple methods
+    async verifyUserLogin(user) {
+        console.log('🔐 Verifying user login...');
+        
+        // Method 1: Check Firebase currentUser
+        const currentUser = firebase.auth().currentUser;
+        console.log('📋 Firebase currentUser:', currentUser ? currentUser.email : 'null');
+        
+        // Method 2: Force token refresh to ensure authentication
+        if (currentUser) {
+            try {
+                await currentUser.getIdToken(true);
+                console.log('✅ Token refresh successful');
+            } catch (error) {
+                console.error('❌ Token refresh failed:', error);
+            }
+        }
+        
+        // Method 3: Check if user is actually authenticated
+        const isAuthenticated = await this.checkUserAuthentication(user);
+        console.log('🔐 User authentication status:', isAuthenticated);
+        
+        if (!isAuthenticated) {
+            throw new Error('User authentication failed after OAuth');
+        }
+        
+        return true;
+    }
+
+    // 🔥 NEW: Check if user is properly authenticated
+    async checkUserAuthentication(user) {
+        try {
+            // Try to get user ID token
+            const token = await user.getIdToken();
+            console.log('🎫 User token obtained:', !!token);
+            
+            // Check if user has basic properties
+            const hasRequiredProps = user.uid && user.email;
+            console.log('👤 User has required properties:', hasRequiredProps);
+            
+            return !!token && hasRequiredProps;
+        } catch (error) {
+            console.error('❌ User authentication check failed:', error);
+            return false;
         }
     }
 
@@ -520,94 +596,6 @@ class AuthManager {
         } catch (profileError) {
             console.error('Error handling OAuth user profile:', profileError);
         }
-    }
-
-    // 🔥 NUCLEAR APPROACH: Force OAuth UI switching
-    async handleOAuthNuclear(user) {
-        console.log('🚀 NUCLEAR: Starting aggressive OAuth UI handling...');
-        
-        this.currentUser = user;
-        
-        // Method 1: Normal switch
-        console.log('🎯 Method 1: Normal switchToApp()');
-        this.switchToApp();
-        
-        // Method 2: Force update all UI elements
-        console.log('🎯 Method 2: Force updating all UI elements');
-        this.updateUIForUser(user);
-        this.updateNavigationUI();
-        this.updateAuthButtonsUI();
-        this.updateEmailVerificationStatus(user);
-        
-        // Method 3: DOM manipulation fallback
-        console.log('🎯 Method 3: DOM manipulation fallback');
-        this.forceDomSwitch();
-        
-        // Method 4: Multiple delayed attempts
-        console.log('🎯 Method 4: Multiple delayed attempts');
-        this.multipleUIAttempts(user);
-        
-        console.log('✅ NUCLEAR OAuth handling complete');
-    }
-
-    // 🔥 NEW: Force DOM manipulation
-    forceDomSwitch() {
-        console.log('💥 FORCE: Manipulating DOM directly...');
-        
-        const authSection = document.getElementById('authSection');
-        const appSection = document.getElementById('appSection');
-        
-        if (authSection && appSection) {
-            // Remove all active classes first
-            authSection.classList.remove('active');
-            appSection.classList.remove('active');
-            
-            // Force display styles
-            authSection.style.display = 'none';
-            appSection.style.display = 'block';
-            
-            // Add active class to app section only
-            appSection.classList.add('active');
-            
-            console.log('💥 FORCE: DOM manipulated - auth hidden, app shown');
-        } else {
-            console.error('❌ FORCE: Could not find sections for DOM manipulation');
-        }
-    }
-
-    // 🔥 NEW: Multiple UI switching attempts
-    multipleUIAttempts(user) {
-        console.log('🔄 Starting multiple UI attempts...');
-        
-        const attempts = [
-            { delay: 100, method: 'First immediate switch' },
-            { delay: 500, method: 'Second attempt after popup close' },
-            { delay: 1000, method: 'Third final attempt' },
-            { delay: 2000, method: 'Fourth safety attempt' }
-        ];
-        
-        attempts.forEach((attempt, index) => {
-            setTimeout(() => {
-                console.log(`🔄 Attempt ${index + 1}: ${attempt.method}`);
-                
-                // Check current state
-                const authSection = document.getElementById('authSection');
-                const isAuthVisible = authSection && authSection.classList.contains('active');
-                
-                if (isAuthVisible) {
-                    console.log(`🚨 Attempt ${index + 1}: Auth section still visible, forcing switch`);
-                    this.switchToApp();
-                    this.forceDomSwitch();
-                } else {
-                    console.log(`✅ Attempt ${index + 1}: App section is visible`);
-                }
-                
-                // Update UI elements each attempt
-                this.updateUIForUser(user);
-                this.updateNavigationUI();
-                
-            }, attempt.delay);
-        });
     }
 
     async handleForgotPassword() {
@@ -1012,6 +1000,13 @@ class AuthManager {
     }
 
     handleGoogleSignInError(error) {
+        console.error('🔍 Detailed Google OAuth error:', {
+            code: error.code,
+            message: error.message,
+            email: error.email,
+            credential: error.credential
+        });
+        
         switch (error.code) {
             case 'auth/popup-closed-by-user':
                 console.log('User closed the popup window');
@@ -1027,6 +1022,9 @@ class AuthManager {
                 break;
             case 'auth/operation-not-allowed':
                 this.showError('Google sign-in not enabled! Please contact support.');
+                break;
+            case 'auth/internal-error':
+                this.showError('Internal authentication error. Please try again.');
                 break;
             default:
                 this.showError('Google sign-in failed! Error: ' + (error.message || 'Unknown error'));
