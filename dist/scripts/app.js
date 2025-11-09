@@ -19,7 +19,6 @@ class CyberSafeApp {
             
         } catch (error) {
             console.error('❌ App initialization failed:', error);
-            
         }
     }
 
@@ -30,54 +29,69 @@ class CyberSafeApp {
             // Wait for Firebase to be ready
             await this.waitForFirebase();
             
-            // Initialize all managers in correct order
-            this.initManagers();
+            // Initialize AuthManager FIRST and wait for it
+            await this.initAuthManager();
+            
+            // Then initialize other managers
+            this.initOtherManagers();
             
             // Setup global event listeners
             this.setupGlobalEvents();
-            
-            // Check authentication state
-            await this.checkAuthState();
             
             this.isInitialized = true;
             console.log('✅ CyberSafe App initialized successfully');
             
         } catch (error) {
             console.error('❌ App initialization error:', error);
-        
         }
     }
 
-    waitForFirebase() {
-        return new Promise((resolve, reject) => {
-            const maxWaitTime = 10000;
-            const startTime = Date.now();
-            
-            const checkFirebase = () => {
-                if (typeof firebase !== 'undefined' && firebase.app) {
-                    console.log('✅ Firebase initialized');
+    async initAuthManager() {
+        console.log('🔐 Initializing AuthManager...');
+        this.updateLoadingText('Setting up authentication...');
+        
+        // Initialize AuthManager and wait for it to be ready
+        window.authManager = new AuthManager();
+        
+        // Wait for AuthManager to initialize
+        return new Promise((resolve) => {
+            const checkAuthManager = () => {
+                if (window.authManager && window.authManager.isInitialized) {
+                    console.log('✅ AuthManager initialized successfully');
+                    
+                    // Listen to AuthManager's auth state changes instead of creating our own
+                    window.authManager.onAuthStateChanged((user) => {
+                        this.handleAuthStateChange(user);
+                    });
+
+                    // Also listen for UI updates to ensure coordination
+                    window.authManager.onUIUpdate((user) => {
+                        console.log('🔄 UI update requested by AuthManager');
+                        if (user) {
+                            this.showAppSection();
+                        } else {
+                            this.showAuthSection();
+                        }
+                    });
+                    
                     resolve();
-                } else if (Date.now() - startTime > maxWaitTime) {
-                    reject(new Error('Firebase initialization timeout'));
                 } else {
-                    setTimeout(checkFirebase, 100);
+                    setTimeout(checkAuthManager, 100);
                 }
             };
-            
-            checkFirebase();
+            checkAuthManager();
         });
     }
 
-    initManagers() {
-        console.log('🔧 Initializing managers...');
+    initOtherManagers() {
+        console.log('🔧 Initializing other managers...');
         this.updateLoadingText('Loading modules and content...');
         
         try {
-            // Core services first
+            // Core services
             window.firestoreService = new FirestoreService();
             
-            // Then UI managers
-            window.authManager = new AuthManager();
+            // UI managers
             window.dashboardManager = new DashboardManager();
             window.modulesManager = new ModulesManager();
             window.moduleContentManager = new ModuleContentManager();
@@ -98,117 +112,84 @@ class CyberSafeApp {
         }
     }
 
-    setupGlobalEvents() {
-        console.log('🔗 Setting up global events...');
+    // Single source of truth for auth state changes
+    async handleAuthStateChange(user) {
+        console.log('🔄 Auth state change handled by CyberSafeApp:', user ? user.email : 'No user');
         
-        // Global error handler
-        window.addEventListener('error', (e) => {
-            console.error('🌍 Global error:', e.error);
-            
-        });
-
-        // Unhandled promise rejection handler
-        window.addEventListener('unhandledrejection', (e) => {
-            console.error('🌍 Unhandled promise rejection:', e.reason);
-            
-            e.preventDefault();
-        });
-
-        // Online/offline handling
-        window.addEventListener('online', () => {
-            this.showSuccessToast('Back online - syncing data...');
-            this.syncOfflineData();
-        });
-
-        window.addEventListener('offline', () => {
-            this.showWarningToast('You are currently offline');
-        });
-
-        // Featured modules click handler
-        document.addEventListener('click', (e) => {
-            // Handle featured modules in dashboard
-            if (e.target.closest('.modules-grid .module-item')) {
-                const moduleItem = e.target.closest('.module-item');
-                const moduleId = moduleItem.getAttribute('data-module');
-                console.log('🎯 Featured module clicked:', moduleId);
-                
-                if (window.moduleContentManager && moduleId) {
-                    window.moduleContentManager.openModule(moduleId);
-                }
-            }
-
-            // Handle continue learning button in dashboard
-            if (e.target.closest('.btn-continue')) {
-                const button = e.target.closest('.btn-continue');
-                const moduleId = button.getAttribute('data-module');
-                console.log('🎯 Continue learning button clicked:', moduleId);
-                
-                if (window.moduleContentManager && moduleId) {
-                    window.moduleContentManager.openModule(moduleId);
-                }
-            }
-        });
-
-        // Service worker registration for future PWA capabilities
-        // this.registerServiceWorker();
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Escape key to close modals
-            if (e.key === 'Escape') {
-                this.closeAllModals();
-            }
-            
-            // Ctrl/Cmd + D to toggle dark mode
-            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-                e.preventDefault();
-                this.toggleDarkMode();
-            }
-        });
-
-        console.log('✅ Global events setup completed');
-    }
-
-    async checkAuthState() {
-        this.updateLoadingText('Checking authentication...');
-        
-        return new Promise((resolve) => {
-            firebase.auth().onAuthStateChanged(async (user) => {
-                if (user) {
-                    console.log('👤 User is signed in:', user.email);
-                    await this.handleUserSignedIn(user);
-                } else {
-                    console.log('👤 No user signed in');
-                    this.handleUserSignedOut();
-                }
-                resolve();
-            });
-        });
+        if (user) {
+            await this.handleUserSignedIn(user);
+        } else {
+            this.handleUserSignedOut();
+        }
     }
 
     async handleUserSignedIn(user) {
-        try {
-            this.updateLoadingText('Loading your progress...');
-            
-            // Show app section
-            this.showAppSection();
-            
-            // Load initial user data
-            await this.loadInitialData(user);
-            
-            // Setup real-time listeners
-            this.setupRealTimeListeners(user.uid);
-            
-            // Hide loading screen after data is loaded
-            setTimeout(() => {
-                this.hideLoadingScreen();
-            }, 1000);
-            
-        } catch (error) {
-            console.error('❌ Error handling user sign in:', error);
+    try {
+        this.updateLoadingText('Loading your progress...');
+        
+        // CRITICAL: Let AuthManager handle UI switching
+        // Don't call showAppSection here - AuthManager will do it
+        console.log('🔄 Deferring UI switch to AuthManager...');
+        
+        // Wait a bit to ensure AuthManager has done its job
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Only then load data
+        await this.loadInitialData(user);
+        
+        // Setup real-time listeners
+        this.setupRealTimeListeners(user.uid);
+        
+        // Hide loading screen after data is loaded
+        setTimeout(() => {
             this.hideLoadingScreen();
-        }
+        }, 1000);
+        
+    } catch (error) {
+        console.error('❌ Error handling user sign in:', error);
+        this.hideLoadingScreen();
     }
+}
+
+    handleUserSignedOut() {
+        console.log('👤 User signed out, cleaning up...');
+        
+        // Clean up all real-time listeners
+        this.cleanupListeners();
+        
+        // Show auth section
+        this.showAuthSection();
+        this.hideLoadingScreen();
+    }
+
+    // ADD BACK: UI Switching Methods
+    showAppSection() {
+    console.log('🔄 CyberSafeApp: Showing app section...');
+    const authSection = document.getElementById('authSection');
+    const appSection = document.getElementById('appSection');
+    
+    if (authSection && appSection) {
+        authSection.classList.remove('active');
+        appSection.classList.add('active');
+        console.log('✅ CyberSafeApp: App section shown successfully');
+    } else {
+        console.error('❌ CyberSafeApp: Could not find authSection or appSection elements');
+    }
+}
+
+showAuthSection() {
+    console.log('🔄 CyberSafeApp: Showing auth section...');
+    const authSection = document.getElementById('authSection');
+    const appSection = document.getElementById('appSection');
+    
+    if (authSection && appSection) {
+        appSection.classList.remove('active');
+        authSection.classList.add('active');
+        console.log('✅ CyberSafeApp: Auth section shown successfully');
+    } else {
+        console.error('❌ CyberSafeApp: Could not find authSection or appSection elements');
+    }
+}
 
     setupRealTimeListeners(uid) {
         console.log('🔄 Setting up real-time data listeners...');
@@ -281,13 +262,6 @@ class CyberSafeApp {
             });
     }
 
-    handleUserSignedOut() {
-        // Clean up all real-time listeners
-        this.cleanupListeners();
-        this.showAuthSection();
-        this.hideLoadingScreen();
-    }
-
     cleanupListeners() {
         const listeners = [
             'unsubscribeUserProfile',
@@ -303,6 +277,139 @@ class CyberSafeApp {
             }
         });
         console.log('🧹 Cleaned up all real-time listeners');
+    }
+
+    async loadInitialData(user) {
+        try {
+            console.log('📥 Loading initial data for user:', user.uid);
+            
+            // Load user profile and progress
+            if (window.firestoreService) {
+                const userData = await window.firestoreService.getUserProfile(user.uid);
+                console.log('📊 User data loaded:', userData);
+                
+                if (userData && window.dashboardManager) {
+                    await window.dashboardManager.updateProgressUI(userData);
+                }
+
+                // Update user streak
+                await window.firestoreService.updateUserStreak(user.uid);
+                
+                // Load modules with real progress
+                if (window.modulesManager) {
+                    await window.modulesManager.updateModulesWithRealProgress();
+                }
+
+                // Mark data as loaded
+                this.isDataLoaded = true;
+                
+                console.log('✅ Initial data loaded successfully');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading initial data:', error);
+            this.isDataLoaded = false;
+        }
+    }
+
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+            console.log('✅ Loading screen hidden');
+        }
+    }
+
+    updateLoadingText(text) {
+        const loadingText = document.getElementById('loadingText');
+        if (loadingText) {
+            loadingText.textContent = text;
+        }
+    }
+
+    waitForFirebase() {
+        return new Promise((resolve, reject) => {
+            const maxWaitTime = 10000;
+            const startTime = Date.now();
+            
+            const checkFirebase = () => {
+                if (typeof firebase !== 'undefined' && firebase.app) {
+                    console.log('✅ Firebase initialized');
+                    resolve();
+                } else if (Date.now() - startTime > maxWaitTime) {
+                    reject(new Error('Firebase initialization timeout'));
+                } else {
+                    setTimeout(checkFirebase, 100);
+                }
+            };
+            
+            checkFirebase();
+        });
+    }
+
+    setupGlobalEvents() {
+        console.log('🔗 Setting up global events...');
+        
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            console.error('🌍 Global error:', e.error);
+        });
+
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('🌍 Unhandled promise rejection:', e.reason);
+            e.preventDefault();
+        });
+
+        // Online/offline handling
+        window.addEventListener('online', () => {
+            this.showSuccessToast('Back online - syncing data...');
+            this.syncOfflineData();
+        });
+
+        window.addEventListener('offline', () => {
+            this.showWarningToast('You are currently offline');
+        });
+
+        // Featured modules click handler
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.modules-grid .module-item')) {
+                const moduleItem = e.target.closest('.module-item');
+                const moduleId = moduleItem.getAttribute('data-module');
+                console.log('🎯 Featured module clicked:', moduleId);
+                
+                if (window.moduleContentManager && moduleId) {
+                    window.moduleContentManager.openModule(moduleId);
+                }
+            }
+
+            if (e.target.closest('.btn-continue')) {
+                const button = e.target.closest('.btn-continue');
+                const moduleId = button.getAttribute('data-module');
+                console.log('🎯 Continue learning button clicked:', moduleId);
+                
+                if (window.moduleContentManager && moduleId) {
+                    window.moduleContentManager.openModule(moduleId);
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+            }
+            
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                this.toggleDarkMode();
+            }
+        });
+
+        console.log('✅ Global events setup completed');
     }
 
     handleNewBadge(badgeData) {
@@ -349,67 +456,6 @@ class CyberSafeApp {
         });
     }
 
-    async loadInitialData(user) {
-        try {
-            console.log('📥 Loading initial data for user:', user.uid);
-            
-            // Load user profile and progress
-            if (window.firestoreService) {
-                const userData = await window.firestoreService.getUserProfile(user.uid);
-                console.log('📊 User data loaded:', userData);
-                
-                if (userData && window.dashboardManager) {
-                    await window.dashboardManager.updateProgressUI(userData);
-                }
-
-                // Update user streak
-                await window.firestoreService.updateUserStreak(user.uid);
-                
-                // Load modules with real progress
-                if (window.modulesManager) {
-                    await window.modulesManager.updateModulesWithRealProgress();
-                }
-
-                // Mark data as loaded
-                this.isDataLoaded = true;
-                
-                console.log('✅ Initial data loaded successfully');
-            }
-
-        } catch (error) {
-            console.error('❌ Error loading initial data:', error);
-            // Continue even if data loading fails
-            this.isDataLoaded = false;
-        }
-    }
-
-    showAppSection() {
-        document.getElementById('authSection').classList.remove('active');
-        document.getElementById('appSection').classList.add('active');
-    }
-
-    showAuthSection() {
-        document.getElementById('appSection').classList.remove('active');
-        document.getElementById('authSection').classList.add('active');
-    }
-
-    hideLoadingScreen() {
-        const loadingScreen = document.getElementById('loadingScreen');
-        loadingScreen.classList.add('hidden');
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-        }, 500);
-    }
-
-    updateLoadingText(text) {
-        const loadingText = document.getElementById('loadingText');
-        if (loadingText) {
-            loadingText.textContent = text;
-        }
-    }
-
-    // ... (rest of the methods remain the same - closeAllModals, toggleDarkMode, toast methods, etc.)
-
     // Utility method to check app status
     getStatus() {
         return {
@@ -428,6 +474,27 @@ class CyberSafeApp {
                 video: !!window.videoPlayerManager
             }
         };
+    }
+
+    // Placeholder methods for toast notifications
+    showSuccessToast(message) {
+        console.log('✅', message);
+    }
+
+    showWarningToast(message) {
+        console.log('⚠️', message);
+    }
+
+    syncOfflineData() {
+        console.log('🔄 Syncing offline data...');
+    }
+
+    closeAllModals() {
+        console.log('🗂️ Closing all modals...');
+    }
+
+    toggleDarkMode() {
+        console.log('🌙 Toggling dark mode...');
     }
 }
 

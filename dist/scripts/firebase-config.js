@@ -1,5 +1,4 @@
 // scripts/firebase-config.js
-// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyC0ScXmzo0-O2Vsxjpp2nTDmJkLETobEQg",
     authDomain: "v0ai-real.firebaseapp.com",
@@ -11,22 +10,32 @@ const firebaseConfig = {
     measurementId: "G-1828HQE7KH"
 };
 
-// Initialize Firebase
-try {
-    firebase.initializeApp(firebaseConfig);
-    console.log("Firebase initialized successfully");
-} catch (error) {
-    console.error("Firebase initialization error:", error);
+// Enhanced initialization with better error handling
+function initializeFirebase() {
+    try {
+        console.log('🔥 Initializing Firebase...');
+        
+        // Check if Firebase is already initialized
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log('✅ Firebase initialized successfully');
+        } else {
+            console.log('✅ Firebase already initialized');
+        }
+        
+        // Configure auth
+        const auth = firebase.auth();
+        auth.useDeviceLanguage();
+        
+        console.log('✅ Firebase services ready');
+        return { auth, db: firebase.firestore() };
+        
+    } catch (error) {
+        console.error('❌ Firebase initialization failed:', error);
+        alert('Firebase initialization failed: ' + error.message);
+        throw error;
+    }
 }
 
-// Firebase services
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-// Firebase Auth Providers
-const googleProvider = new firebase.auth.GoogleAuthProvider();
-
-// Export for use in other files
-window.firebaseAuth = auth;
-window.firebaseDb = db;
-window.googleProvider = googleProvider;
+// Initialize immediately
+window.firebaseApp = initializeFirebase();
