@@ -2,30 +2,55 @@ class DashboardManager {
     constructor() {
         this.currentSection = 'dashboard';
         this.themeToggleInitialized = false;
+        this.isInitialized = false;
         this.init();
     }
 
     async init() {
+        console.log('📊 DashboardManager initializing...');
+        
+        // Setup basic UI components that don't need auth
         this.setupNavigation();
         this.setupThemeToggle();
         this.setupEventListeners();
         
-        firebase.auth().onAuthStateChanged(async (user) => {
+        // 🔥 CRITICAL FIX: Use direct auth state check instead of waiting for app
+        this.setupDirectAuthListener();
+        
+        this.isInitialized = true;
+        console.log('✅ DashboardManager initialized');
+    }
+
+    // 🔥 NEW: Direct auth state listener
+    setupDirectAuthListener() {
+        console.log('🔐 DashboardManager setting up direct auth listener...');
+        
+        // Check current auth state immediately
+        const user = firebase.auth().currentUser;
+        if (user) {
+            console.log('👤 User already authenticated, loading dashboard data...');
+            this.loadUserProgress();
+            this.loadProfileData();
+        }
+        
+        // Listen for future auth changes
+        firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                console.log('👤 User authenticated, loading data...');
-                await this.loadUserProgress();
-                await this.loadProfileData();
-                if (window.profileManager) {
-                    await window.profileManager.loadUserProfile();
-                }
+                console.log('👤 DashboardManager: User authenticated via direct listener');
+                this.loadUserProgress();
+                this.loadProfileData();
+            } else {
+                console.log('👤 DashboardManager: User signed out via direct listener');
+                // Reset dashboard state if needed
             }
         });
-        
-        setTimeout(() => {
-            if (window.navigationManager) {
-                console.log('✅ Navigation manager integrated');
-            }
-        }, 100);
+    }
+
+    // 🔥 NEW: Public method for CyberSafeApp to call
+    onAuthReady(user) {
+        console.log('📊 DashboardManager: Auth ready callback received for user:', user.email);
+        this.loadUserProgress();
+        this.loadProfileData();
     }
 
     setupEventListeners() {
@@ -92,7 +117,7 @@ class DashboardManager {
                 }
                 break;
             case 'caseStudies':
-                if (window.modulesManager) {
+                if (window.caseStudyManager) {
                     window.caseStudyManager.loadCaseStudies();
                 }
                 break;
@@ -159,80 +184,77 @@ class DashboardManager {
     }
 
     async updateProgressUI(userData) {
-    console.log('📈 Updating progress UI with user data:', userData);
-    
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    try {
-        // Get comprehensive progress data
-        const [modulesProgress, quizResults, caseStudyResults, badges, streakData] = await Promise.all([
-            this.getModulesProgress(user.uid),
-            this.getQuizResults(user.uid),
-            this.getCaseStudyResults(user.uid),
-            this.getUserBadges(user.uid),
-            this.getUserStreak(user.uid) // Get streak data
-        ]);
-
-        // Calculate accurate statistics
-        const stats = await this.calculateComprehensiveStats(
-            modulesProgress, 
-            quizResults, 
-            caseStudyResults, 
-            badges,
-            streakData // Pass streak data
-        );
-
-        console.log('📊 Calculated comprehensive stats:', stats);
-
-        // Update progress circle
-        this.updateProgressCircle(stats.overallProgress);
-
-        // Update stats cards
-        this.updateStatsCards(stats);
-
-        // Update profile stats
-        this.updateProfileStats(stats);
-
-        // Update continue learning section
-        this.updateContinueLearningSection(user.uid, modulesProgress);
-
-        // Update level and badges
-        this.updateUserLevel(stats);
-        this.updateBadgeCount(stats.badgesEarned);
-
-    } catch (error) {
-        console.error('❌ Error in updateProgressUI:', error);
-    }
-}
-
-// ADD THIS NEW METHOD to get streak data
-async getUserStreak(uid) {
-    try {
-        if (!window.firestoreService) return { currentStreak: 1, longestStreak: 1 }; // Default to 1
+        console.log('📈 Updating progress UI with user data:', userData);
         
-        // Try to get streak from user profile
-        const userDoc = await firebase.firestore()
-            .collection('users')
-            .doc(uid)
-            .get();
-            
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            return {
-                currentStreak: userData.currentStreak || 1,
-                longestStreak: userData.longestStreak || 1,
-                lastLogin: userData.lastLogin
-            };
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        try {
+            // Get comprehensive progress data
+            const [modulesProgress, quizResults, caseStudyResults, badges, streakData] = await Promise.all([
+                this.getModulesProgress(user.uid),
+                this.getQuizResults(user.uid),
+                this.getCaseStudyResults(user.uid),
+                this.getUserBadges(user.uid),
+                this.getUserStreak(user.uid)
+            ]);
+
+            // Calculate accurate statistics
+            const stats = await this.calculateComprehensiveStats(
+                modulesProgress, 
+                quizResults, 
+                caseStudyResults, 
+                badges,
+                streakData
+            );
+
+            console.log('📊 Calculated comprehensive stats:', stats);
+
+            // Update progress circle
+            this.updateProgressCircle(stats.overallProgress);
+
+            // Update stats cards
+            this.updateStatsCards(stats);
+
+            // Update profile stats
+            this.updateProfileStats(stats);
+
+            // Update continue learning section
+            this.updateContinueLearningSection(user.uid, modulesProgress);
+
+            // Update level and badges
+            this.updateUserLevel(stats);
+            this.updateBadgeCount(stats.badgesEarned);
+
+        } catch (error) {
+            console.error('❌ Error in updateProgressUI:', error);
         }
-        
-        return { currentStreak: 1, longestStreak: 1 }; // Default to 1 if no data
-    } catch (error) {
-        console.error('Error getting user streak:', error);
-        return { currentStreak: 1, longestStreak: 1 }; // Default to 1 on error
     }
-}
 
+    async getUserStreak(uid) {
+        try {
+            if (!window.firestoreService) return { currentStreak: 1, longestStreak: 1 };
+            
+            const userDoc = await firebase.firestore()
+                .collection('users')
+                .doc(uid)
+                .get();
+                
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                return {
+                    currentStreak: userData.currentStreak || 1,
+                    longestStreak: userData.longestStreak || 1,
+                    lastLogin: userData.lastLogin
+                };
+            }
+            
+            return { currentStreak: 1, longestStreak: 1 };
+        } catch (error) {
+            console.error('Error getting user streak:', error);
+            return { currentStreak: 1, longestStreak: 1 };
+        }
+    }
 
     async getModulesProgress(uid) {
         try {
@@ -298,50 +320,50 @@ async getUserStreak(uid) {
     }
 
     async calculateComprehensiveStats(modulesProgress, quizResults, caseStudyResults, badges, streakData = {}) {
-    // Calculate module completion
-    const completedModules = modulesProgress.filter(module => module.completed);
-    const moduleCompletionRate = modulesProgress.length > 0 ? 
-        (completedModules.length / 6) * 100 : 0;
+        // Calculate module completion
+        const completedModules = modulesProgress.filter(module => module.completed);
+        const moduleCompletionRate = modulesProgress.length > 0 ? 
+            (completedModules.length / 6) * 100 : 0;
 
-    // Calculate average quiz score
-    const allScores = [
-        ...quizResults.map(quiz => quiz.score || 0),
-        ...caseStudyResults.map(caseStudy => caseStudy.score || 0)
-    ];
-    const averageScore = allScores.length > 0 ? 
-        Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
+        // Calculate average quiz score
+        const allScores = [
+            ...quizResults.map(quiz => quiz.score || 0),
+            ...caseStudyResults.map(caseStudy => caseStudy.score || 0)
+        ];
+        const averageScore = allScores.length > 0 ? 
+            Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
 
-    // Calculate overall progress (weighted average)
-    const moduleWeight = 0.4;
-    const quizWeight = 0.4;  
-    const badgeWeight = 0.2;
+        // Calculate overall progress (weighted average)
+        const moduleWeight = 0.4;
+        const quizWeight = 0.4;  
+        const badgeWeight = 0.2;
 
-    const moduleProgress = moduleCompletionRate;
-    const quizProgress = averageScore;
-    const badgeProgress = Math.min((badges.length / 6) * 100, 100);
+        const moduleProgress = moduleCompletionRate;
+        const quizProgress = averageScore;
+        const badgeProgress = Math.min((badges.length / 6) * 100, 100);
 
-    const overallProgress = Math.round(
-        (moduleProgress * moduleWeight) +
-        (quizProgress * quizWeight) +
-        (badgeProgress * badgeWeight)
-    );
+        const overallProgress = Math.round(
+            (moduleProgress * moduleWeight) +
+            (quizProgress * quizWeight) +
+            (badgeProgress * badgeWeight)
+        );
 
-    // Use actual streak data or default to 1
-    const currentStreak = streakData.currentStreak || 1;
+        // Use actual streak data or default to 1
+        const currentStreak = streakData.currentStreak || 1;
 
-    return {
-        overallProgress: overallProgress,
-        averageScore: averageScore,
-        completedModules: completedModules.length,
-        totalModules: 6,
-        badgesEarned: badges.length,
-        totalBadges: 6,
-        currentStreak: currentStreak,
-        longestStreak: streakData.longestStreak || 1,
-        totalQuizzes: quizResults.length + caseStudyResults.length,
-        moduleCompletionRate: Math.round(moduleCompletionRate)
-    };
-}
+        return {
+            overallProgress: overallProgress,
+            averageScore: averageScore,
+            completedModules: completedModules.length,
+            totalModules: 6,
+            badgesEarned: badges.length,
+            totalBadges: 6,
+            currentStreak: currentStreak,
+            longestStreak: streakData.longestStreak || 1,
+            totalQuizzes: quizResults.length + caseStudyResults.length,
+            moduleCompletionRate: Math.round(moduleCompletionRate)
+        };
+    }
 
     updateProgressCircle(progress) {
         const progressCircle = document.querySelector('.circle-progress');
@@ -589,7 +611,7 @@ async getUserStreak(uid) {
         console.log('✅ Icon updated:', icon.className);
     }
 
-    async loadProfileData() {
+     async loadProfileData() {
         console.log('🛡️ Loading profile data...');
         
         const user = firebase.auth().currentUser;

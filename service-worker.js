@@ -1,7 +1,7 @@
 // CyberSafe Progressive Web App Service Worker
 // Version: 2.1.0 - Updated for better cache management
-const CACHE_NAME = 'cybersafe-pwa-v2.1.1';
-const API_CACHE_NAME = 'cybersafe-api-v2.6';
+const CACHE_NAME = 'cybersafe-pwa-v2.1.3';
+const API_CACHE_NAME = 'cybersafe-api-v2.8';
 const STATIC_ASSETS = [
   // Core HTML
   '/',

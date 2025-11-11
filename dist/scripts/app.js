@@ -2,6 +2,7 @@ class CyberSafeApp {
     constructor() {
         this.isInitialized = false;
         this.isDataLoaded = false;
+        this.authStateReady = false;
         this.init();
     }
 
@@ -29,14 +30,14 @@ class CyberSafeApp {
             // Wait for Firebase to be ready
             await this.waitForFirebase();
             
-            // Initialize AuthManager FIRST and wait for it
-            await this.initAuthManager();
-            
-            // Then initialize other managers
-            this.initOtherManagers();
+            // Initialize all managers in correct order
+            this.initManagers();
             
             // Setup global event listeners
             this.setupGlobalEvents();
+            
+            // Check authentication state
+            await this.checkAuthState();
             
             this.isInitialized = true;
             console.log('✅ CyberSafe App initialized successfully');
@@ -46,52 +47,36 @@ class CyberSafeApp {
         }
     }
 
-    async initAuthManager() {
-        console.log('🔐 Initializing AuthManager...');
-        this.updateLoadingText('Setting up authentication...');
-        
-        // Initialize AuthManager and wait for it to be ready
-        window.authManager = new AuthManager();
-        
-        // Wait for AuthManager to initialize
-        return new Promise((resolve) => {
-            const checkAuthManager = () => {
-                if (window.authManager && window.authManager.isInitialized) {
-                    console.log('✅ AuthManager initialized successfully');
-                    
-                    // Listen to AuthManager's auth state changes instead of creating our own
-                    window.authManager.onAuthStateChanged((user) => {
-                        this.handleAuthStateChange(user);
-                    });
-
-                    // Also listen for UI updates to ensure coordination
-                    window.authManager.onUIUpdate((user) => {
-                        console.log('🔄 UI update requested by AuthManager');
-                        if (user) {
-                            this.showAppSection();
-                        } else {
-                            this.showAuthSection();
-                        }
-                    });
-                    
+    waitForFirebase() {
+        return new Promise((resolve, reject) => {
+            const maxWaitTime = 10000;
+            const startTime = Date.now();
+            
+            const checkFirebase = () => {
+                if (typeof firebase !== 'undefined' && firebase.app) {
+                    console.log('✅ Firebase initialized');
                     resolve();
+                } else if (Date.now() - startTime > maxWaitTime) {
+                    reject(new Error('Firebase initialization timeout'));
                 } else {
-                    setTimeout(checkAuthManager, 100);
+                    setTimeout(checkFirebase, 100);
                 }
             };
-            checkAuthManager();
+            
+            checkFirebase();
         });
     }
 
-    initOtherManagers() {
-        console.log('🔧 Initializing other managers...');
+    initManagers() {
+        console.log('🔧 Initializing managers...');
         this.updateLoadingText('Loading modules and content...');
         
         try {
-            // Core services
+            // Core services first
             window.firestoreService = new FirestoreService();
             
-            // UI managers
+            // Then UI managers
+            window.authManager = new AuthManager();
             window.dashboardManager = new DashboardManager();
             window.modulesManager = new ModulesManager();
             window.moduleContentManager = new ModuleContentManager();
@@ -112,44 +97,118 @@ class CyberSafeApp {
         }
     }
 
-    // Single source of truth for auth state changes
-    async handleAuthStateChange(user) {
-        console.log('🔄 Auth state change handled by CyberSafeApp:', user ? user.email : 'No user');
+    setupGlobalEvents() {
+        console.log('🔗 Setting up global events...');
         
-        if (user) {
-            await this.handleUserSignedIn(user);
-        } else {
-            this.handleUserSignedOut();
-        }
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            console.error('🌍 Global error:', e.error);
+        });
+
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('🌍 Unhandled promise rejection:', e.reason);
+            e.preventDefault();
+        });
+
+        // Online/offline handling
+        window.addEventListener('online', () => {
+            this.showSuccessToast('Back online - syncing data...');
+            this.syncOfflineData();
+        });
+
+        window.addEventListener('offline', () => {
+            this.showWarningToast('You are currently offline');
+        });
+
+        // Featured modules click handler
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.modules-grid .module-item')) {
+                const moduleItem = e.target.closest('.module-item');
+                const moduleId = moduleItem.getAttribute('data-module');
+                console.log('🎯 Featured module clicked:', moduleId);
+                
+                if (window.moduleContentManager && moduleId) {
+                    window.moduleContentManager.openModule(moduleId);
+                }
+            }
+
+            if (e.target.closest('.btn-continue')) {
+                const button = e.target.closest('.btn-continue');
+                const moduleId = button.getAttribute('data-module');
+                console.log('🎯 Continue learning button clicked:', moduleId);
+                
+                if (window.moduleContentManager && moduleId) {
+                    window.moduleContentManager.openModule(moduleId);
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+            }
+            
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                this.toggleDarkMode();
+            }
+        });
+
+        console.log('✅ Global events setup completed');
+    }
+
+    // 🔥 CRITICAL FIX: Use SINGLE auth state listener
+    async checkAuthState() {
+        this.updateLoadingText('Checking authentication...');
+        
+        return new Promise((resolve) => {
+            firebase.auth().onAuthStateChanged(async (user) => {
+                console.log('🔄 Auth state changed in CyberSafeApp:', user ? `User: ${user.email}` : 'No user');
+                
+                this.authStateReady = true;
+                
+                if (user) {
+                    console.log('👤 User is signed in:', user.email);
+                    await this.handleUserSignedIn(user);
+                } else {
+                    console.log('👤 No user signed in');
+                    this.handleUserSignedOut();
+                }
+                resolve();
+            });
+        });
     }
 
     async handleUserSignedIn(user) {
-    try {
-        this.updateLoadingText('Loading your progress...');
-        
-        // CRITICAL: Let AuthManager handle UI switching
-        // Don't call showAppSection here - AuthManager will do it
-        console.log('🔄 Deferring UI switch to AuthManager...');
-        
-        // Wait a bit to ensure AuthManager has done its job
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Only then load data
-        await this.loadInitialData(user);
-        
-        // Setup real-time listeners
-        this.setupRealTimeListeners(user.uid);
-        
-        // Hide loading screen after data is loaded
-        setTimeout(() => {
+        try {
+            this.updateLoadingText('Loading your progress...');
+            
+            // 🔥 CRITICAL: Show app section immediately
+            this.showAppSection();
+            
+            // 🔥 CRITICAL: Notify DashboardManager that auth is ready
+            if (window.dashboardManager && window.dashboardManager.onAuthReady) {
+                window.dashboardManager.onAuthReady(user);
+            }
+            
+            // Load initial user data
+            await this.loadInitialData(user);
+            
+            // Setup real-time listeners
+            this.setupRealTimeListeners(user.uid);
+            
+            // Hide loading screen after data is loaded
+            setTimeout(() => {
+                this.hideLoadingScreen();
+            }, 1000);
+            
+        } catch (error) {
+            console.error('❌ Error handling user sign in:', error);
             this.hideLoadingScreen();
-        }, 1000);
-        
-    } catch (error) {
-        console.error('❌ Error handling user sign in:', error);
-        this.hideLoadingScreen();
+        }
     }
-}
 
     handleUserSignedOut() {
         console.log('👤 User signed out, cleaning up...');
@@ -161,35 +220,6 @@ class CyberSafeApp {
         this.showAuthSection();
         this.hideLoadingScreen();
     }
-
-    // ADD BACK: UI Switching Methods
-    showAppSection() {
-    console.log('🔄 CyberSafeApp: Showing app section...');
-    const authSection = document.getElementById('authSection');
-    const appSection = document.getElementById('appSection');
-    
-    if (authSection && appSection) {
-        authSection.classList.remove('active');
-        appSection.classList.add('active');
-        console.log('✅ CyberSafeApp: App section shown successfully');
-    } else {
-        console.error('❌ CyberSafeApp: Could not find authSection or appSection elements');
-    }
-}
-
-showAuthSection() {
-    console.log('🔄 CyberSafeApp: Showing auth section...');
-    const authSection = document.getElementById('authSection');
-    const appSection = document.getElementById('appSection');
-    
-    if (authSection && appSection) {
-        appSection.classList.remove('active');
-        authSection.classList.add('active');
-        console.log('✅ CyberSafeApp: Auth section shown successfully');
-    } else {
-        console.error('❌ CyberSafeApp: Could not find authSection or appSection elements');
-    }
-}
 
     setupRealTimeListeners(uid) {
         console.log('🔄 Setting up real-time data listeners...');
@@ -312,6 +342,34 @@ showAuthSection() {
         }
     }
 
+    showAppSection() {
+        console.log('🔄 CyberSafeApp: Showing app section...');
+        const authSection = document.getElementById('authSection');
+        const appSection = document.getElementById('appSection');
+        
+        if (authSection && appSection) {
+            authSection.classList.remove('active');
+            appSection.classList.add('active');
+            console.log('✅ CyberSafeApp: App section shown successfully');
+        } else {
+            console.error('❌ CyberSafeApp: Could not find authSection or appSection elements');
+        }
+    }
+
+    showAuthSection() {
+        console.log('🔄 CyberSafeApp: Showing auth section...');
+        const authSection = document.getElementById('authSection');
+        const appSection = document.getElementById('appSection');
+        
+        if (authSection && appSection) {
+            appSection.classList.remove('active');
+            authSection.classList.add('active');
+            console.log('✅ CyberSafeApp: Auth section shown successfully');
+        } else {
+            console.error('❌ CyberSafeApp: Could not find authSection or appSection elements');
+        }
+    }
+
     hideLoadingScreen() {
         const loadingScreen = document.getElementById('loadingScreen');
         if (loadingScreen) {
@@ -328,88 +386,6 @@ showAuthSection() {
         if (loadingText) {
             loadingText.textContent = text;
         }
-    }
-
-    waitForFirebase() {
-        return new Promise((resolve, reject) => {
-            const maxWaitTime = 10000;
-            const startTime = Date.now();
-            
-            const checkFirebase = () => {
-                if (typeof firebase !== 'undefined' && firebase.app) {
-                    console.log('✅ Firebase initialized');
-                    resolve();
-                } else if (Date.now() - startTime > maxWaitTime) {
-                    reject(new Error('Firebase initialization timeout'));
-                } else {
-                    setTimeout(checkFirebase, 100);
-                }
-            };
-            
-            checkFirebase();
-        });
-    }
-
-    setupGlobalEvents() {
-        console.log('🔗 Setting up global events...');
-        
-        // Global error handler
-        window.addEventListener('error', (e) => {
-            console.error('🌍 Global error:', e.error);
-        });
-
-        // Unhandled promise rejection handler
-        window.addEventListener('unhandledrejection', (e) => {
-            console.error('🌍 Unhandled promise rejection:', e.reason);
-            e.preventDefault();
-        });
-
-        // Online/offline handling
-        window.addEventListener('online', () => {
-            this.showSuccessToast('Back online - syncing data...');
-            this.syncOfflineData();
-        });
-
-        window.addEventListener('offline', () => {
-            this.showWarningToast('You are currently offline');
-        });
-
-        // Featured modules click handler
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.modules-grid .module-item')) {
-                const moduleItem = e.target.closest('.module-item');
-                const moduleId = moduleItem.getAttribute('data-module');
-                console.log('🎯 Featured module clicked:', moduleId);
-                
-                if (window.moduleContentManager && moduleId) {
-                    window.moduleContentManager.openModule(moduleId);
-                }
-            }
-
-            if (e.target.closest('.btn-continue')) {
-                const button = e.target.closest('.btn-continue');
-                const moduleId = button.getAttribute('data-module');
-                console.log('🎯 Continue learning button clicked:', moduleId);
-                
-                if (window.moduleContentManager && moduleId) {
-                    window.moduleContentManager.openModule(moduleId);
-                }
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeAllModals();
-            }
-            
-            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-                e.preventDefault();
-                this.toggleDarkMode();
-            }
-        });
-
-        console.log('✅ Global events setup completed');
     }
 
     handleNewBadge(badgeData) {
@@ -461,6 +437,7 @@ showAuthSection() {
         return {
             initialized: this.isInitialized,
             dataLoaded: this.isDataLoaded,
+            authStateReady: this.authStateReady,
             firebase: typeof firebase !== 'undefined' && !!firebase.app,
             user: firebase.auth().currentUser ? {
                 uid: firebase.auth().currentUser.uid,

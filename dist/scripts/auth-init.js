@@ -1,4 +1,41 @@
-// COMPLETE OPTIMIZED AUTH MANAGER - auth.js
+class RateLimiter {
+    constructor(maxAttempts = 3, cooldownMs = 60000) {
+        this.maxAttempts = maxAttempts;
+        this.cooldownMs = cooldownMs;
+        this.attempts = new Map(); // key -> {count, lastTry}
+    }
+
+    canTry(key) {
+        const now = Date.now();
+        const record = this.attempts.get(key);
+        
+        // First attempt or cooldown expired
+        if (!record || (now - record.lastTry) > this.cooldownMs) {
+            this.attempts.set(key, { count: 1, lastTry: now });
+            return true;
+        }
+        
+        // Too many attempts
+        if (record.count >= this.maxAttempts) {
+            return false;
+        }
+        
+        // Within limits, increment count
+        record.count++;
+        record.lastTry = now;
+        return true;
+    }
+
+    getWaitTime(key) {
+        const record = this.attempts.get(key);
+        if (!record) return 0;
+        
+        const timeSinceLast = Date.now() - record.lastTry;
+        return Math.max(0, this.cooldownMs - timeSinceLast);
+    }
+}
+
+
 class AuthManager {
     constructor() {
         if (AuthManager.instance) {
@@ -10,8 +47,13 @@ class AuthManager {
         this.currentUser = null;
         this.isInitialized = false;
         this.authStateListeners = [];
+        this.googleSignInInProgress = false;
+
+        this.emailRateLimiter = new RateLimiter(3, 60000);
+        this.loginRateLimiter = new RateLimiter(5, 300000); 
+        this.signupRateLimiter = new RateLimiter(2, 300000); 
         
-        // Google provider setup
+        // Simple Google provider setup
         this.googleProvider = new firebase.auth.GoogleAuthProvider();
         this.googleProvider.addScope('email');
         this.googleProvider.addScope('profile');
@@ -106,13 +148,23 @@ class AuthManager {
                 console.log('🔄 Auth state changed:', user ? `User: ${user.email}` : 'No user');
                 this.currentUser = user;
                 
+                // Reset Google buttons when auth state changes
+                this.setGoogleButtonsState(false, 'Google');
+                this.googleSignInInProgress = false;
+                
                 if (user) {
+                    try {
+                        await user.reload();
+                        console.log('🔄 User reloaded in auth state listener:', user.emailVerified);
+                    } catch (error) {
+                        console.warn('⚠️ User reload failed:', error);
+                    }
+                    
                     await this.handleUserLogin(user);
                 } else {
                     this.handleUserLogout();
                 }
                 
-                // Notify all auth state listeners
                 this.notifyAuthStateListeners(user);
             });
             console.log('✅ Auth state listener setup complete');
@@ -134,12 +186,10 @@ class AuthManager {
     onAuthStateChanged(listener) {
         this.authStateListeners.push(listener);
         
-        // Immediately call with current user if available
         if (this.currentUser) {
             setTimeout(() => listener(this.currentUser), 0);
         }
         
-        // Return unsubscribe function
         return () => {
             const index = this.authStateListeners.indexOf(listener);
             if (index > -1) {
@@ -303,6 +353,7 @@ class AuthManager {
         }
     }
 
+    // Email login
     async handleEmailLogin() {
         console.log('🔐 Starting login...');
         
@@ -310,6 +361,12 @@ class AuthManager {
         const password = document.getElementById('loginPassword')?.value;
         
         console.log('📧 Email:', email);
+
+        if (!this.loginRateLimiter.canTry(email)) {
+        const waitTime = Math.ceil(this.loginRateLimiter.getWaitTime(email) / 1000);
+        this.showError(`Too many login attempts. Please wait ${waitTime} seconds.`);
+        return;
+    }
         
         if (!email || !password) {
             this.showError('Please enter both email and password');
@@ -331,6 +388,9 @@ class AuthManager {
             const user = userCredential.user;
             
             console.log('✅ Login successful!', user.email);
+            
+            // Reload user to get latest verification status
+            await user.reload();
             
             // Update user profile if firestore service exists
             if (window.firestoreService) {
@@ -354,6 +414,12 @@ class AuthManager {
         }
     }
 
+    // Email validation
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
     async handleEmailSignup() {
         console.log('📝 Starting signup...');
         
@@ -361,6 +427,12 @@ class AuthManager {
         const email = document.getElementById('signupEmail')?.value;
         const password = document.getElementById('signupPassword')?.value;
         const confirmPassword = document.getElementById('signupConfirmPassword')?.value;
+
+        if (!this.signupRateLimiter.canTry(email)) {
+        const waitTime = Math.ceil(this.signupRateLimiter.getWaitTime(email) / 1000);
+        this.showError(`Too many signup attempts. Please wait ${waitTime} seconds.`);
+        return;
+    }
 
         if (!name || !email || !password || !confirmPassword) {
             this.showError('Please fill in all fields');
@@ -433,168 +505,104 @@ class AuthManager {
         }
     }
 
-    async handleGoogleSignIn() {
-        console.log('🔐 Starting Google sign-in...');
+    // 🔥 FIXED: Google Sign-In with Redirect Fallback
+async handleGoogleSignIn() {
+    if (this.googleSignInInProgress) {
+        console.log('⏳ Google sign-in already in progress, please wait...');
+        return;
+    }
+
+    console.log('🔐 Starting Google sign-in...');
+    this.googleSignInInProgress = true;
+    this.setGoogleButtonsState(true, 'Connecting...');
+
+    try {
+        console.log('🔄 Starting Google OAuth...');
         
-        // Disable Google buttons immediately
-        this.setGoogleButtonsState(true, 'Connecting...');
-
+        // Try popup first, fallback to redirect if it fails
         try {
-            console.log('🔄 Starting Google OAuth popup...');
-            
-            this.showInfo('Opening Google sign-in window... Please allow popups if blocked.');
-            
-            // Small delay to ensure user sees the message
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            // 🔥 CRITICAL FIX: Use getRedirectResult to handle OAuth properly
-            const result = await this.withTimeout(
-                firebase.auth().signInWithPopup(this.googleProvider),
-                45000
-            );
-            
+            console.log('🪟 Attempting popup authentication...');
+            const result = await firebase.auth().signInWithPopup(this.googleProvider);
             const user = result.user;
-            console.log('✅ Google sign-in successful:', user.email);
-            console.log('📋 User details:', {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                emailVerified: user.emailVerified,
-                providerData: user.providerData
-            });
-
-            // 🔥 CRITICAL: Wait for Firebase to persist the user
-            console.log('🔄 Waiting for Firebase user persistence...');
-            await this.waitForUserPersistence(user);
             
-            // Handle user profile immediately
-            await this.handleOAuthUserProfile(user);
-            
-            // 🔥 CRITICAL: Verify user is actually logged in with Firebase
-            await this.verifyUserLogin(user);
-            
+            console.log('✅ Google sign-in successful!', user.email);
+            await this.handleGoogleUserProfile(user);
             this.showSuccess('Welcome, ' + (user.displayName || user.email) + '!');
             
-        } catch (error) {
-            console.error('❌ Google sign in failed:', error);
-            this.handleGoogleSignInError(error);
-        } finally {
+        } catch (popupError) {
+            console.log('🪟 Popup failed, trying redirect...', popupError);
+            
+            // Store current location to return after redirect
+            sessionStorage.setItem('preAuthLocation', window.location.href);
+            
+            // Use redirect method as fallback
+            await firebase.auth().signInWithRedirect(this.googleProvider);
+            console.log('🔄 Redirect initiated...');
+            return; // Don't reset buttons - we're redirecting
+        }
+        
+    } catch (error) {
+        console.error('❌ Google sign in failed:', error);
+        this.handleGoogleSignInError(error);
+    } finally {
+        // Only reset if we're not redirecting
+        if (!sessionStorage.getItem('preAuthLocation')) {
             this.setGoogleButtonsState(false, 'Google');
+            this.googleSignInInProgress = false;
         }
     }
+}
 
-    // 🔥 NEW: Wait for Firebase to persist the user properly
-    async waitForUserPersistence(user) {
-        console.log('⏳ Waiting for user persistence...');
-        
-        return new Promise((resolve, reject) => {
-            let attempts = 0;
-            const maxAttempts = 10;
+    // 🔥 SIMPLIFIED: Handle Google user profile
+    async handleGoogleUserProfile(user) {
+        try {
+            console.log('👤 Processing Google user profile for:', user.email);
             
-            const checkPersistence = () => {
-                attempts++;
-                const currentUser = firebase.auth().currentUser;
-                
-                console.log(`🔍 Persistence check ${attempts}:`, {
-                    currentUser: currentUser ? currentUser.email : 'null',
-                    expectedUser: user.email,
-                    match: currentUser && currentUser.uid === user.uid
-                });
-                
-                if (currentUser && currentUser.uid === user.uid) {
-                    console.log('✅ User persistence confirmed!');
-                    resolve(currentUser);
-                    return;
-                }
-                
-                if (attempts >= maxAttempts) {
-                    console.warn('⚠️ User persistence timeout, but continuing...');
-                    resolve(user); // Continue with original user
-                    return;
-                }
-                
-                setTimeout(checkPersistence, 500);
-            };
-            
-            checkPersistence();
-        });
-    }
-
-    // 🔥 NEW: Verify user login with multiple methods
-    async verifyUserLogin(user) {
-        console.log('🔐 Verifying user login...');
-        
-        // Method 1: Check Firebase currentUser
-        const currentUser = firebase.auth().currentUser;
-        console.log('📋 Firebase currentUser:', currentUser ? currentUser.email : 'null');
-        
-        // Method 2: Force token refresh to ensure authentication
-        if (currentUser) {
-            try {
-                await currentUser.getIdToken(true);
-                console.log('✅ Token refresh successful');
-            } catch (error) {
-                console.error('❌ Token refresh failed:', error);
+            if (!window.firestoreService) {
+                console.warn('⚠️ Firestore service not available, skipping profile creation');
+                return;
             }
-        }
-        
-        // Method 3: Check if user is actually authenticated
-        const isAuthenticated = await this.checkUserAuthentication(user);
-        console.log('🔐 User authentication status:', isAuthenticated);
-        
-        if (!isAuthenticated) {
-            throw new Error('User authentication failed after OAuth');
-        }
-        
-        return true;
-    }
 
-    // 🔥 NEW: Check if user is properly authenticated
-    async checkUserAuthentication(user) {
-        try {
-            // Try to get user ID token
-            const token = await user.getIdToken();
-            console.log('🎫 User token obtained:', !!token);
+            const userDoc = await window.firestoreService.getUserProfile(user.uid);
             
-            // Check if user has basic properties
-            const hasRequiredProps = user.uid && user.email;
-            console.log('👤 User has required properties:', hasRequiredProps);
-            
-            return !!token && hasRequiredProps;
-        } catch (error) {
-            console.error('❌ User authentication check failed:', error);
-            return false;
-        }
-    }
-
-    async handleOAuthUserProfile(user) {
-        try {
-            console.log('👤 Processing OAuth user profile...');
-            
-            if (window.firestoreService) {
-                const userDoc = await window.firestoreService.getUserProfile(user.uid);
-                if (!userDoc) {
-                    console.log('📝 Creating new user profile for OAuth user');
-                    await window.firestoreService.createUserProfile(user, {
-                        name: user.displayName,
-                        email: user.email,
-                        photoURL: user.photoURL,
-                        emailVerified: user.emailVerified,
-                        authProvider: 'google',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    console.log('✅ User profile created in Firestore');
-                } else {
-                    console.log('🔄 Updating existing user profile');
-                    await this.updateUserProfileData(user);
-                    console.log('✅ User profile updated in Firestore');
-                }
+            if (!userDoc) {
+                console.log('📝 Creating new user profile for Google user');
+                
+                const userData = {
+                    name: user.displayName || 'Google User',
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    emailVerified: user.emailVerified,
+                    authProvider: 'google',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                console.log('📦 Creating user with data:', userData);
+                
+                await window.firestoreService.createUserProfile(user, userData);
+                console.log('✅ User profile created in Firestore');
+                
             } else {
-                console.log('⚠️ Firestore service not available, skipping profile creation');
+                console.log('🔄 Updating existing user profile');
+                
+                const updates = {
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                    emailVerified: user.emailVerified,
+                    name: user.displayName || userDoc.name,
+                    email: user.email,
+                    photoURL: user.photoURL || userDoc.photoURL
+                };
+                
+                console.log('📦 Updating user with data:', updates);
+                
+                await window.firestoreService.updateUserProgress(user.uid, updates);
+                console.log('✅ User profile updated in Firestore');
             }
+            
         } catch (profileError) {
-            console.error('Error handling OAuth user profile:', profileError);
+            console.error('❌ Error handling Google user profile:', profileError);
+            // Don't throw - user should still be logged in even if Firestore fails
         }
     }
 
@@ -659,31 +667,43 @@ class AuthManager {
     }
 
     async resendVerificationEmail() {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-            this.showError('Please log in to resend verification email.');
-            return;
-        }
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        this.showError('Please log in to resend verification email.');
+        return;
+    }
 
-        if (user.emailVerified) {
-            this.showSuccess('Your email is already verified.');
-            return;
-        }
+    if (user.emailVerified) {
+        this.showSuccess('Your email is already verified.');
+        return;
+    }
 
-        const shouldResend = await this.showConfirm(`Resend verification email to:\n${user.email}\n\nAre you sure?`);
+    // 🔥 RATE LIMIT CHECK
+    if (!this.emailRateLimiter.canTry(user.email)) {
+        const waitTime = Math.ceil(this.emailRateLimiter.getWaitTime(user.email) / 1000);
+        this.showError(`Please wait ${waitTime} seconds before requesting another verification email.`);
+        return;
+    }
+
+    const shouldResend = await this.showConfirm(`Resend verification email to:\n${user.email}\n\nAre you sure?`);
+    
+    if (!shouldResend) return;
+
+    try {
+        console.log('📧 Sending verification email to:', user.email);
+        await user.sendEmailVerification(this.actionCodeSettings);
+        this.showSuccess('Verification email sent! Please check your inbox.');
         
-        if (!shouldResend) {
-            return;
-        }
-
-        try {
-            await user.sendEmailVerification(this.actionCodeSettings);
-            this.showSuccess('Verification email sent! Please check your inbox.');
-        } catch (error) {
-            console.error('Resend verification error:', error);
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        
+        if (error.code === 'auth/too-many-requests') {
+            this.showError('Too many requests. Please wait at least 1 hour before trying again.');
+        } else {
             this.showError('Failed to send verification email: ' + error.message);
         }
     }
+}
 
     handleEmailVerificationFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -713,6 +733,9 @@ class AuthManager {
         this.currentUser = user;
         
         try {
+            // Ensure fresh user data
+            await user.reload();
+            
             // Ensure user profile exists
             await this.ensureUserProfile(user);
         } catch (error) {
@@ -761,72 +784,13 @@ class AuthManager {
         this.switchToAuth();
         this.hideEmailVerificationBanner();
         
-        // Update navigation
         this.updateNavigationUI();
         this.updateAuthButtonsUI();
         
         console.log('✅ User logout handling complete');
     }
 
-    updateNavigationUI() {
-        const user = this.currentUser;
-        
-        // Update user menu items
-        const userMenu = document.getElementById('userMenu');
-        const authButtons = document.getElementById('authButtons');
-        
-        if (userMenu && authButtons) {
-            if (user) {
-                userMenu.style.display = 'flex';
-                authButtons.style.display = 'none';
-            } else {
-                userMenu.style.display = 'none';
-                authButtons.style.display = 'flex';
-            }
-        }
-
-        // Update mobile navigation
-        const mobileUserMenu = document.getElementById('mobileUserMenu');
-        const mobileAuthButtons = document.getElementById('mobileAuthButtons');
-        
-        if (mobileUserMenu && mobileAuthButtons) {
-            if (user) {
-                mobileUserMenu.style.display = 'flex';
-                mobileAuthButtons.style.display = 'none';
-            } else {
-                mobileUserMenu.style.display = 'none';
-                mobileAuthButtons.style.display = 'flex';
-            }
-        }
-    }
-
-    updateAuthButtonsUI() {
-        const user = this.currentUser;
-        
-        // Update login/signup buttons visibility
-        const loginButtons = document.querySelectorAll('.login-btn, .signup-btn, .auth-btn');
-        const logoutButtons = document.querySelectorAll('.logout-btn, .signout-btn');
-        
-        loginButtons.forEach(btn => {
-            btn.style.display = user ? 'none' : 'block';
-        });
-        
-        logoutButtons.forEach(btn => {
-            btn.style.display = user ? 'block' : 'none';
-        });
-
-        // Update Google buttons
-        const googleButtons = document.querySelectorAll('#googleSignIn, #googleSignUp, .google-auth-btn');
-        googleButtons.forEach(btn => {
-            if (user) {
-                btn.style.display = 'none';
-            } else {
-                btn.style.display = 'block';
-                btn.disabled = false;
-            }
-        });
-    }
-
+    // UI Management Methods
     switchToApp() {
         console.log('🔄 Switching to app section...');
         
@@ -837,6 +801,13 @@ class AuthManager {
             authSection.classList.remove('active');
             appSection.classList.add('active');
             console.log('✅ Switched to app section - auth hidden, app shown');
+            
+            // Trigger dashboard refresh if manager exists
+            if (window.dashboardManager && typeof window.dashboardManager.refreshDashboard === 'function') {
+                setTimeout(() => {
+                    window.dashboardManager.refreshDashboard();
+                }, 500);
+            }
         } else {
             console.error('❌ Could not find authSection or appSection elements');
         }
@@ -881,15 +852,69 @@ class AuthManager {
         this.updateUserAvatar(user);
     }
 
+    // 🔥 UPDATED: Enhanced user avatar with proper image handling
     updateUserAvatar(user) {
-        const avatarUrl = user.photoURL || 
-                         `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=0A1F44&color=fff`;
+        console.log('🖼️ Updating user avatar for:', user.email);
+        console.log('📸 User photoURL:', user.photoURL);
+        console.log('👤 User displayName:', user.displayName);
+        console.log('🔐 Auth provider:', user.providerData[0]?.providerId);
         
-        const avatars = ['userAvatar', 'profileAvatar'];
+        // Determine the avatar URL based on auth provider
+        let avatarUrl;
+        
+        // Check if user signed in with Google and has a photo
+        const isGoogleUser = user.providerData.some(provider => provider.providerId === 'google.com');
+        
+        if (isGoogleUser && user.photoURL) {
+            // Use Google profile picture
+            avatarUrl = user.photoURL;
+            console.log('✅ Using Google profile picture:', avatarUrl);
+        } else {
+            // Generate avatar from name (first two words)
+            const name = user.displayName || user.email.split('@')[0] || 'User';
+            const initials = this.getInitialsFromName(name);
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0A1F44&color=fff&bold=true&size=128`;
+            console.log('✅ Generated avatar from name:', { name, initials, avatarUrl });
+        }
+        
+        // Update all avatar elements
+        const avatars = [
+            'userAvatar', 
+            'profileAvatar',
+            'navbarUserAvatar',
+            'mobileUserAvatar'
+        ];
+        
         avatars.forEach(avatarId => {
             const avatar = document.getElementById(avatarId);
-            if (avatar) avatar.src = avatarUrl;
+            if (avatar) {
+                console.log(`🖼️ Updating avatar ${avatarId} with:`, avatarUrl);
+                avatar.src = avatarUrl;
+                avatar.onerror = () => {
+                    console.warn(`⚠️ Failed to load avatar for ${avatarId}, using fallback`);
+                    // Fallback to initials-based avatar
+                    const name = user.displayName || user.email.split('@')[0] || 'User';
+                    const initials = this.getInitialsFromName(name);
+                    avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0A1F44&color=fff&bold=true&size=128`;
+                };
+            }
         });
+    }
+
+    // 🔥 NEW: Get initials from name (first two words)
+    getInitialsFromName(name) {
+        if (!name) return 'U';
+        
+        // Split by space and take first two words
+        const words = name.trim().split(/\s+/);
+        
+        if (words.length === 1) {
+            // Single word - take first 2 characters
+            return words[0].substring(0, 2).toUpperCase();
+        } else {
+            // Multiple words - take first character of first two words
+            return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+        }
     }
 
     updateEmailVerificationStatus(user) {
@@ -938,46 +963,62 @@ class AuthManager {
         }
     }
 
-    setGoogleButtonsState(disabled, text) {
-        console.log(`🔄 Setting Google buttons state: ${disabled ? 'disabled' : 'enabled'}`);
+    updateNavigationUI() {
+        const user = this.currentUser;
         
-        const googleSelectors = [
-            '#googleSignIn',
-            '#googleSignUp',
-            '.google-signin-btn',
-            '.google-signup-btn',
-            '.google-auth-btn',
-            '.btn-google',
-            '[data-provider="google"]'
-        ];
+        const userMenu = document.getElementById('userMenu');
+        const authButtons = document.getElementById('authButtons');
+        
+        if (userMenu && authButtons) {
+            if (user) {
+                userMenu.style.display = 'flex';
+                authButtons.style.display = 'none';
+            } else {
+                userMenu.style.display = 'none';
+                authButtons.style.display = 'flex';
+            }
+        }
 
-        googleSelectors.forEach(selector => {
-            const buttons = document.querySelectorAll(selector);
-            buttons.forEach(btn => {
-                if (btn) {
-                    btn.disabled = disabled;
-                    if (disabled) {
-                        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
-                    } else if (btn.dataset.originalHtml) {
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                }
-            });
-        });
-    }
-
-    setButtonState(button, disabled, text) {
-        if (button) {
-            button.disabled = disabled;
-            if (disabled) {
-                button.dataset.originalText = button.textContent;
-                button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
-            } else if (button.dataset.originalText) {
-                button.textContent = button.dataset.originalText;
+        const mobileUserMenu = document.getElementById('mobileUserMenu');
+        const mobileAuthButtons = document.getElementById('mobileAuthButtons');
+        
+        if (mobileUserMenu && mobileAuthButtons) {
+            if (user) {
+                mobileUserMenu.style.display = 'flex';
+                mobileAuthButtons.style.display = 'none';
+            } else {
+                mobileUserMenu.style.display = 'none';
+                mobileAuthButtons.style.display = 'flex';
             }
         }
     }
 
+    updateAuthButtonsUI() {
+        const user = this.currentUser;
+        
+        const loginButtons = document.querySelectorAll('.login-btn, .signup-btn, .auth-btn');
+        const logoutButtons = document.querySelectorAll('.logout-btn, .signout-btn');
+        
+        loginButtons.forEach(btn => {
+            btn.style.display = user ? 'none' : 'block';
+        });
+        
+        logoutButtons.forEach(btn => {
+            btn.style.display = user ? 'block' : 'none';
+        });
+
+        const googleButtons = document.querySelectorAll('#googleSignIn, #googleSignUp, .google-auth-btn');
+        googleButtons.forEach(btn => {
+            if (user) {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'block';
+                btn.disabled = false;
+            }
+        });
+    }
+
+    // Error Handling
     handleAuthError(error, type) {
         let errorMessage = type === 'login' ? 'Login failed: ' : 
                           type === 'signup' ? 'Signup failed: ' : 
@@ -1007,21 +1048,24 @@ class AuthManager {
             credential: error.credential
         });
         
+        this.googleSignInInProgress = false;
+        
         switch (error.code) {
             case 'auth/popup-closed-by-user':
                 console.log('User closed the popup window');
+                this.showInfo('Sign-in cancelled. Please try again if you want to continue.');
                 break;
             case 'auth/popup-blocked':
                 this.showError('Popup blocked! Please allow popups for this site.');
                 break;
             case 'auth/unauthorized-domain':
-                this.showError('Domain not authorized! Please contact support.');
+                this.showError('Domain not authorized! Please check your Firebase configuration.');
                 break;
             case 'auth/network-request-failed':
                 this.showError('Network error! Please check your internet connection.');
                 break;
             case 'auth/operation-not-allowed':
-                this.showError('Google sign-in not enabled! Please contact support.');
+                this.showError('Google sign-in not enabled! Please check Firebase configuration.');
                 break;
             case 'auth/internal-error':
                 this.showError('Internal authentication error. Please try again.');
@@ -1031,21 +1075,40 @@ class AuthManager {
         }
     }
 
-    withTimeout(promise, timeoutMs) {
-        return new Promise((resolve, reject) => {
-            const timeoutId = setTimeout(() => {
-                reject(new Error('Operation timed out. Please try again.'));
-            }, timeoutMs);
+    // Utility Methods
+    setGoogleButtonsState(disabled, text) {
+        console.log(`🔄 Setting Google buttons state: ${disabled ? 'disabled' : 'enabled'}`);
+        
+        const googleSelectors = [
+            '#googleSignIn', '#googleSignUp', '.google-signin-btn', '.google-signup-btn',
+            '.google-auth-btn', '.btn-google', '[data-provider="google"]'
+        ];
 
-            promise.then(resolve, reject).finally(() => {
-                clearTimeout(timeoutId);
+        googleSelectors.forEach(selector => {
+            const buttons = document.querySelectorAll(selector);
+            buttons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = disabled;
+                    if (disabled) {
+                        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+                    } else if (btn.dataset.originalHtml) {
+                        btn.innerHTML = btn.dataset.originalHtml;
+                    }
+                }
             });
         });
     }
 
-    isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+    setButtonState(button, disabled, text) {
+        if (button) {
+            button.disabled = disabled;
+            if (disabled) {
+                button.dataset.originalText = button.textContent;
+                button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+            } else if (button.dataset.originalText) {
+                button.textContent = button.dataset.originalText;
+            }
+        }
     }
 
     async updateUserProfileData(user) {
