@@ -1571,30 +1571,41 @@ class ProfileManager {
         URL.revokeObjectURL(url);
     }
 
-    // Certificate download
+    // Certificate download (legacy method - now handled by certificate generator)
     async downloadCertificate(certId) {
         try {
-            const user = firebase.auth().currentUser;
-            if (!user) {
-                this.showError('Please log in to download certificates');
-                return;
-            }
+            if (window.certificateGenerator) {
+                // Get certificate data from certificate generator
+                const certificate = await window.certificateGenerator.getCertificate(certId);
+                if (certificate) {
+                    await window.certificateGenerator.downloadCertificate(certificate);
+                    this.showSuccess('Certificate downloaded successfully!');
+                } else {
+                    this.showError('Certificate not found');
+                }
+            } else {
+                // Fallback to legacy method
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    this.showError('Please log in to download certificates');
+                    return;
+                }
 
-            // Get certificate data
-            const certDoc = await firebase.firestore()
-                .collection('userCertifications')
-                .doc(user.uid)
-                .get();
+                // Get certificate data
+                const certDoc = await firebase.firestore()
+                    .collection('userCertifications')
+                    .doc(user.uid)
+                    .get();
 
-            if (!certDoc.exists) {
-                this.showError('Certificate not found');
-                return;
-            }
+                if (!certDoc.exists) {
+                    this.showError('Certificate not found');
+                    return;
+                }
 
-            const cert = certDoc.data();
-            
-            // Create certificate content
-            const certificateContent = `
+                const cert = certDoc.data();
+
+                // Create certificate content
+                const certificateContent = `
 CYBERSAFE CERTIFICATE OF COMPLETION
 
 This certifies that
@@ -1609,10 +1620,11 @@ Certificate ID: ${certId}
 
 CyberSafe - Enterprise Cybersecurity Education
 ${window.location.origin}
-            `.trim();
+                `.trim();
 
-            this.downloadFile(certificateContent, `cybersafe-certificate-${certId}.txt`, 'text/plain');
-            this.showSuccess('Certificate downloaded successfully!');
+                this.downloadFile(certificateContent, `cybersafe-certificate-${certId}.txt`, 'text/plain');
+                this.showSuccess('Certificate downloaded successfully!');
+            }
 
         } catch (error) {
             console.error('Error downloading certificate:', error);

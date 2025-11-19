@@ -83,11 +83,11 @@ class FirestoreService {
     async saveModuleProgress(uid, moduleId, progressData) {
         try {
             const progressRef = this.db.collection('user_progress').doc(uid).collection('modules').doc(moduleId);
-            
+
             const progressUpdate = {
                 moduleId,
                 userId: uid,
-                progress: progressData.progress,
+                progress: progressData.progress || 0,
                 completed: progressData.completed || false,
                 score: progressData.score || 0,
                 timeSpent: progressData.timeSpent || 0,
@@ -99,7 +99,7 @@ class FirestoreService {
 
             // Update overall progress in user document
             await this.updateOverallProgress(uid);
-            
+
             console.log('✅ Module progress saved:', progressUpdate);
             return progressUpdate;
         } catch (error) {

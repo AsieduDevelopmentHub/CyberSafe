@@ -24,21 +24,25 @@ class DashboardManager {
     // 🔥 NEW: Direct auth state listener
     setupDirectAuthListener() {
         console.log('🔐 DashboardManager setting up direct auth listener...');
-        
+
         // Check current auth state immediately
         const user = firebase.auth().currentUser;
         if (user) {
             console.log('👤 User already authenticated, loading dashboard data...');
-            this.loadUserProgress();
-            this.loadProfileData();
+            // Load user progress first, then profile data
+            this.loadUserProgress().then(() => {
+                this.loadProfileData();
+            });
         }
-        
+
         // Listen for future auth changes
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 console.log('👤 DashboardManager: User authenticated via direct listener');
-                this.loadUserProgress();
-                this.loadProfileData();
+                // Load user progress first, then profile data
+                this.loadUserProgress().then(() => {
+                    this.loadProfileData();
+                });
             } else {
                 console.log('👤 DashboardManager: User signed out via direct listener');
                 // Reset dashboard state if needed
@@ -134,27 +138,37 @@ class DashboardManager {
         const user = firebase.auth().currentUser;
         if (!user) {
             console.log('👤 No user logged in, skipping progress load');
-            return;
+            return null;
         }
 
         try {
             console.log('📥 Loading user progress for:', user.uid);
-            
+
             if (window.firestoreService) {
+                // Load user profile data
                 const userData = await window.firestoreService.getUserProfile(user.uid);
                 console.log('📊 User data from Firestore:', userData);
-                
+
                 if (userData) {
-                    await this.updateProgressUI(userData);
+                    // Update UI with user data
                     this.updateUserInfoFromFirestore(userData);
+
+                    // Load and update progress UI
+                    await this.updateProgressUI(userData);
+
+                    // Update streak data
+                    await window.firestoreService.updateUserStreak(user.uid);
+
+                    console.log('✅ User progress loaded successfully');
+                    return userData;
                 } else {
                     console.log('❌ No user data found in Firestore');
+                    return null;
                 }
-
-                await window.firestoreService.updateUserStreak(user.uid);
             }
         } catch (error) {
             console.error('❌ Error loading user progress:', error);
+            return null;
         }
     }
 

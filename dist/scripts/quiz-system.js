@@ -443,6 +443,7 @@ class QuizManager {
                 // Handle post-save actions
                 if (this.quizResults.passed) {
                     try {
+                        // Award badge
                         const badgeData = {
                             name: `${window.moduleContentManager.currentModule.title} Expert`,
                             description: `Scored ${this.quizResults.score}% on ${window.moduleContentManager.currentModule.title} quiz`,
@@ -455,6 +456,28 @@ class QuizManager {
 
                         await window.firestoreService.awardBadge(uid, `${moduleId}_expert`, badgeData);
                         console.log('🏆 Badge awarded successfully');
+
+                        // Generate certificate
+                        if (window.certificateGenerator && window.moduleContentManager.currentModule) {
+                            try {
+                                const user = firebase.auth().currentUser;
+                                if (user) {
+                                    const userData = await window.firestoreService.getUserProfile(user.uid);
+                                    if (userData) {
+                                        await window.certificateGenerator.generateCertificate(
+                                            userData,
+                                            window.moduleContentManager.currentModule,
+                                            this.quizResults
+                                        );
+                                        console.log('🎓 Certificate generated successfully');
+                                    }
+                                }
+                            } catch (certError) {
+                                console.error('⚠️ Certificate generation failed:', certError);
+                                // Don't throw error as quiz results are saved
+                            }
+                        }
+
                     } catch (error) {
                         console.error('⚠️ Badge award failed but quiz results were saved:', error);
                         // Don't throw error as quiz results are saved
