@@ -1,0 +1,34 @@
+{
+	"appId": "com.cybersafe.app",
+	"appName": "CyberSafe",
+	"bundledWebRuntime": false,
+	"npmClient": "npm",
+	"webDir": "dist",
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 3000,
+			"launchAutoHide": true,
+			"backgroundColor": "#0A1F44",
+			"androidSplashResourceName": "splash",
+			"androidScaleType": "CENTER_CROP",
+			"showSpinner": true,
+			"androidSpinnerStyle": "large",
+			"iosSpinnerStyle": "small",
+			"spinnerColor": "#00B8D9",
+			"splashFullScreen": true,
+			"splashImmersive": true,
+			"layoutName": "launch_screen",
+			"useDialog": true
+		}
+	},
+	"server": {
+		"hostname": "cybersafe.auralenx.com",
+		"androidScheme": "https"
+	},
+	"ios": {
+		"scheme": "CyberSafe"
+	},
+	"android": {
+		"scheme": "cybersafe"
+	}
+}

@@ -7,3 +7,6 @@ dist/scripts/firebase-config.js
 #Search files
 search.txt
 firestore.rules
+
+#npm files
+node_modules

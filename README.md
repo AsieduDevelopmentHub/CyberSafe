@@ -1,24 +1,113 @@
-# CyberSafe - Enterprise Cybersecurity Education Platform
+# CyberSafe
 
 <div align="center">
   <img src="./dist/assets/icons/logo.svg" alt="CyberSafe" width="150">
-  
-  # CyberSafe
-  
-  ![Security](https://img.shields.io/badge/Security-Education-blue)
-  ![Firebase](https://img.shields.io/badge/Firebase-Powered-orange)
-  ![Platform](https://img.shields.io/badge/Web-Mobile-green)
+
+**Enterprise Cybersecurity Education Platform**
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Firebase](https://img.shields.io/badge/Firebase-11.3.0-orange.svg)
+![PWA](https://img.shields.io/badge/PWA-Ready-green.svg)
+
+_Transforming cybersecurity awareness from compliance requirement to engaging learning experience_
+
 </div>
 
-![CyberSafe](https://via.placeholder.com/1200x400/0A1F44/FFFFFF?text=CyberSafe+-+Transforming+Security+Training)
+---
 
-> **Transforming cybersecurity awareness from compliance requirement to engaging learning experience**
+## 🚀 Overview
 
-## Overview
+CyberSafe is a comprehensive, gamified cybersecurity education platform designed to replace traditional compliance-driven security training with engaging, interactive learning experiences. Built with modern web technologies and enterprise-grade security, it delivers professional cybersecurity education through an intuitive platform that users actually enjoy using.
 
-**CyberSafe** is a cutting-edge cybersecurity education platform that revolutionizes how organizations approach security training. We replace tedious, compliance-driven security awareness programs with an immersive, gamified learning journey that actually engages employees and builds lasting security habits.
+### ✨ Key Highlights
 
-Built with enterprise-grade security and modern web technologies, CyberSafe delivers professional cybersecurity education through an intuitive, interactive platform that users love to use.
+- **📚 6 Comprehensive Learning Modules** covering essential cybersecurity domains
+- **🎯 Gamified Learning Experience** with badges, streaks, and progress tracking
+- **📱 Progressive Web App** with offline capabilities and mobile optimization
+- **🔒 Enterprise-Grade Security** with Firebase authentication and secure data handling
+- **📊 Real-time Analytics** and detailed progress reporting
+- **🎥 Professional Video Content** integrated with YouTube API
+
+## 📦 Installation & Setup
+
+### Prerequisites
+
+- Node.js 16+ and npm
+- Firebase project with Firestore and Authentication enabled
+- YouTube Data API key (for video content)
+
+### Quick Start
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/yourusername/cybersafe.git
+   cd cybersafe
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configure Firebase**
+
+   - Copy your Firebase config to `dist/scripts/firebase-config.js`
+   - Update Firestore security rules
+   - Enable Authentication providers (Email/Password, Google)
+
+4. **Start development server**
+
+   ```bash
+   npm run dev
+   ```
+
+5. **Build for production**
+   ```bash
+   # Build process will be added
+   npm run build
+   ```
+
+### Firebase Configuration
+
+Update `dist/scripts/firebase-config.js` with your Firebase project credentials:
+
+```javascript
+const firebaseConfig = {
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  // ... other config
+};
+```
+
+## 🏗️ Project Structure
+
+```
+CyberSafe/
+├── dist/                          # Built application
+│   ├── index.html                # Main HTML file
+│   ├── styles/                   # CSS stylesheets
+│   │   ├── main.css             # Core styling
+│   │   ├── auth.css             # Authentication styles
+│   │   ├── dashboard.css        # Dashboard styles
+│   │   └── ...
+│   └── scripts/                  # JavaScript modules
+│       ├── app.js               # Main application
+│       ├── firebase-config.js   # Firebase setup
+│       ├── firestore-service.js # Database operations
+│       ├── auth-init.js         # Authentication
+│       ├── dashboard.js         # Dashboard management
+│       ├── modules.js           # Learning modules
+│       └── ...
+├── capacitor.config.json         # Mobile app config
+├── manifest.json                 # PWA manifest
+├── service-worker.js            # Service worker
+├── package.json                  # Dependencies
+└── README.md                     # This file
+```
 
 ## Key Features
 
@@ -164,27 +253,83 @@ Designed to support organizations of all sizes, from small teams to enterprise d
 
 Curated by security experts with real-world scenarios and practical defense strategies.
 
-## Impact Metrics
+## 📊 API & Integrations
 
-- **85%+ Completion Rates** on security modules
-- **40% Reduction** in phishing susceptibility
-- **92% User Satisfaction** with training experience
-- **3x Engagement** compared to traditional training
+### Firebase Services
+
+- **Authentication**: Email/password, Google OAuth, email verification
+- **Firestore**: Real-time NoSQL database for user data and progress
+- **Security Rules**: Granular access control and data validation
+
+### YouTube Integration
+
+- **Data API v3**: Professional video content delivery
+- **Progress Tracking**: Video completion and watch time monitoring
+- **Fallback Support**: Graceful degradation without API access
+
+### PWA Features
+
+- **Service Worker**: Offline functionality and caching
+- **Web App Manifest**: Installable app experience
+- **Background Sync**: Data synchronization when online
+
+## 🐛 Known Issues & Roadmap
+
+### Current Limitations
+
+- Video player requires YouTube API key configuration
+- Some mobile browsers have limited PWA support
+- Real-time features depend on stable internet connection
+
+### Planned Features
+
+- **Advanced Analytics Dashboard** for administrators
+- **Team Management** and organizational hierarchies
+- **Custom Content Upload** for enterprise deployments
+- **Multi-language Support** for global accessibility
+- **Integration APIs** for LMS and HR systems
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow ES6+ standards and modular architecture
+- Write comprehensive tests for new features
+- Ensure mobile responsiveness for all changes
+- Maintain security best practices
+- Update documentation for API changes
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support & Contact
+
+- **Live Demo**: [cybersafe.auralenx.com](https://cybersafe.auralenx.com)
+- **Documentation**: [docs.cybersafe.com](https://docs.cybersafe.com)
+- **Support**: [support@cybersafe.com](mailto:support@cybersafe.com)
+- **Sales**: [sales@cybersafe.com](mailto:sales@cybersafe.com)
 
 ---
 
 <div align="center">
 
-## Ready to Transform Your Security Training?
+## 🎯 Ready to Transform Your Security Training?
 
 **CyberSafe turns your employees from security risks into security assets.**
 
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-CyberSafe-0A1F44?style=for-the-badge)](https://cybersafe.auralenx.com)
-[![Contact](https://img.shields.io/badge/💬_Contact_Sales-Security_Team-1A73E8?style=for-the-badge)](mailto:auralenx.team@gmail.com)
+[![Contact Sales](https://img.shields.io/badge/💬_Contact_Sales-Security_Team-1A73E8?style=for-the-badge)](mailto:auralenx.team@gmail.com)
 
 ---
 
-**Built with love for a safer digital world**
+**Built with ❤️ for a safer digital world**
 
 _Empowering organizations through effective cybersecurity education_
 

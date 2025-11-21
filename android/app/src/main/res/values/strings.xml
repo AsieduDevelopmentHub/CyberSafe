@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CyberSafe</string>
+    <string name="title_activity_main">CyberSafe</string>
+    <string name="package_name">com.cybersafe.app</string>
+    <string name="custom_url_scheme">com.cybersafe.app</string>
+</resources>

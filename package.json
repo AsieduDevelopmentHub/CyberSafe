@@ -1,7 +1,12 @@
 {
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "jest": "^29.6.0"
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/ios": "^7.4.4",
+    "jest": "^29.6.0",
+    "nodemon": "^3.0.1"
   },
   "scripts": {
     "dev": "nodemon server.js",
