@@ -88,7 +88,7 @@ CyberSafe is suitable for organizations, educational institutions, startups, and
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/AsieduDevelopmentHub/Cybersafe.git
+git clone https://github.com/AsieduDevelopmentHub/CyberSafe.git
 cd cybersafe
 ```
 
